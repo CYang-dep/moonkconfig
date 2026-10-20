@@ -12,6 +12,8 @@ pub fn parse_conditional(String) -> (Expr, Expr) raise ConfigError
 
 pub fn parse_expression(String) -> Expr raise ConfigError
 
+pub fn parse_kconfig(String) -> Schema raise ConfigError
+
 pub fn parse_number(String) -> Int64 raise ConfigError
 
 pub fn parse_tri(String) -> Tri raise ConfigError

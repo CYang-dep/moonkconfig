@@ -1,9 +1,9 @@
 ///|
 priv struct Definition {
   name : String
-  kind : Kind?
+  mut kind : Kind?
   mut prompt : String?
-  prompt_if : Expr
+  mut prompt_if : Expr
   mut depends : Expr
   defaults : Array[(Expr, Expr)]
   selects : Array[(String, Expr)]
