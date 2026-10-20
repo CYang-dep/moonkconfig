@@ -84,6 +84,9 @@ pub fn parse_expression(text : String) -> Expr raise ConfigError {
 
 ///|
 fn parse_expression_tokens(tokens : Array[Token]) -> Expr raise ConfigError {
+  if tokens.length() > 256 {
+    raise Invalid("expression exceeds 256 tokens")
+  }
   let cursor = Ref(0)
   let expr = expression_tokens(tokens, cursor, 1, 0)
   if cursor.val != tokens.length() {

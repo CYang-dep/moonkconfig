@@ -25,6 +25,9 @@ pub fn Schema::request(
   name : String,
   value : Value,
 ) -> Unit raise ConfigError {
+  if value is Text(s) {
+    ignore(quote_string(s))
+  }
   let kind = self.kind(name)
   if !kind.accepts(value) {
     raise Invalid("invalid request type for " + name)

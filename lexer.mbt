@@ -34,6 +34,11 @@ pub fn tokenize(text : String) -> Array[Token] raise ConfigError {
   if text.length() > 65536 {
     raise Invalid("logical line exceeds 65536 units")
   }
+  for i in 0..<text.length() {
+    if text[i] < 32 && text[i] != 9 {
+      raise Invalid("control characters are unsupported in logical lines")
+    }
+  }
   let tokens : Array[Token] = []
   let mut i = 0
   while i < text.length() {
@@ -67,6 +72,9 @@ pub fn tokenize(text : String) -> Array[Token] raise ConfigError {
       }
       if !closed {
         raise Invalid("unclosed quote at \{start}")
+      }
+      if value.contains("$(") || value.contains("${") {
+        raise Invalid("macro expansion in quoted strings unsupported")
       }
       tokens.push({ text: value, quoted: true, offset: start, })
     } else if text[i] == 38 || text[i] == 124 {
@@ -135,7 +143,12 @@ pub fn tokenize(text : String) -> Array[Token] raise ConfigError {
 
 ///|
 /// Escape strings in .config, prompts and generated C string constants.
-pub fn quote_string(text : String) -> String {
+pub fn quote_string(text : String) -> String raise ConfigError {
+  for i in 0..<text.length() {
+    if text[i] < 32 || text[i] == 127 {
+      raise Invalid("control characters cannot be exported")
+    }
+  }
   let mut out = "\""
   for i in 0..<text.length() {
     if text[i] == 92 || text[i] == 34 {

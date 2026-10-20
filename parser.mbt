@@ -152,6 +152,9 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
       continue
     }
     try {
+      if ts[0].quoted {
+        raise Invalid("quoted directive is invalid")
+      }
       match ts[0].text {
         "config" | "menuconfig" => {
           if ts.length() != 2 ||

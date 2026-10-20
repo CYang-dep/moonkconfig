@@ -157,6 +157,20 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
   }
   for d in self.defs {
     let kind = self.kind(d.name)
+    d.depends.validate_bounds()
+    d.prompt_if.validate_bounds()
+    for (a, b) in d.defaults {
+      a.validate_bounds()
+      b.validate_bounds()
+    }
+    for (_, cond) in d.selects + d.implies {
+      cond.validate_bounds()
+    }
+    for (a, b, c) in d.ranges {
+      a.validate_bounds()
+      b.validate_bounds()
+      c.validate_bounds()
+    }
     if d.modules && kind != Boolean {
       raise Invalid("module switch must be bool")
     }

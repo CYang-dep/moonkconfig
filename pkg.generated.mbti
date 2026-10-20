@@ -24,7 +24,7 @@ pub fn parse_sources(String, Map[String, String]) -> Schema raise ConfigError
 
 pub fn parse_tri(String) -> Tri raise ConfigError
 
-pub fn quote_string(String) -> String
+pub fn quote_string(String) -> String raise ConfigError
 
 pub fn tokenize(String) -> Array[Token] raise ConfigError
 

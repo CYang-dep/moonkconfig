@@ -83,6 +83,7 @@ fn expand_sources(
   sources : Map[String, String],
   active : Array[String],
   output : Array[SourceLine],
+  budget : Ref[Int32],
 ) -> Unit raise ConfigError {
   if active.length() >= 32 || active.contains(file) {
     raise Invalid("cyclic or overdeep source: " + file)
@@ -94,6 +95,10 @@ fn expand_sources(
   active.push(file)
   let mut help_indent : Int32? = None
   for line in logical_lines(text, file) {
+    budget.val += line.text.length() + 1
+    if budget.val > 16777216 || output.length() >= 65536 {
+      raise Invalid("expanded source resource budget exceeded")
+    }
     match help_indent {
       Some(level) => {
         if line.text.trim().is_empty() || indentation(line.text) > level {
@@ -105,7 +110,7 @@ fn expand_sources(
       None => ()
     }
     let ts = tokenize(line.text)
-    if !ts.is_empty() && ts[0].text == "help" {
+    if !ts.is_empty() && (ts[0].text == "help" || ts[0].text == "---help---") {
       help_indent = Some(indentation(line.text))
     }
     if !ts.is_empty() &&
@@ -127,7 +132,7 @@ fn expand_sources(
       }
       path = safe_source_path(path)
       if sources.contains(path) {
-        expand_sources(path, sources, active, output)
+        expand_sources(path, sources, active, output, budget)
       } else if ts[0].text == "source" || ts[0].text == "rsource" {
         raise Invalid("missing source: " + path)
       }
@@ -148,6 +153,6 @@ pub fn parse_sources(
   sources : Map[String, String],
 ) -> Schema raise ConfigError {
   let out = []
-  expand_sources(safe_source_path(entry), sources, [], out)
+  expand_sources(safe_source_path(entry), sources, [], out, Ref(0))
   parse_lines(out)
 }
