@@ -142,7 +142,7 @@ pub fn Schema::resolve(
   self : Schema,
   fragment : Fragment,
 ) -> Resolution raise ConfigError {
-  self.validate()
+  ignore(self.dependency_order())
   let requests = fragment.values()
   for name, value in requests {
     if !self.kind(name).accepts(value) {

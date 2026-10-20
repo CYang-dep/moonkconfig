@@ -90,6 +90,7 @@ pub fn Schema::choice_members(Self, String) -> Array[String] raise ConfigError
 pub fn Schema::choice_names(Self) -> Array[String]
 pub fn Schema::default_value(Self, String, Expr, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::dependency(Self, String, Expr) -> Unit raise ConfigError
+pub fn Schema::dependency_order(Self) -> Array[String] raise ConfigError
 pub fn Schema::help(Self, String) -> String raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
 pub fn Schema::names(Self) -> Array[String]
