@@ -1,0 +1,5 @@
+import {
+  "CYang-dep/moonkconfig" @config,
+}
+
+pkgtype(kind: "executable")
