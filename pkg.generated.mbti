@@ -86,6 +86,8 @@ pub struct Schema {
   // private fields
 }
 pub fn Schema::add(Self, String, Kind, prompt? : String) -> Unit raise ConfigError
+pub fn Schema::choice_members(Self, String) -> Array[String] raise ConfigError
+pub fn Schema::choice_names(Self) -> Array[String]
 pub fn Schema::default_value(Self, String, Expr, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::dependency(Self, String, Expr) -> Unit raise ConfigError
 pub fn Schema::help(Self, String) -> String raise ConfigError

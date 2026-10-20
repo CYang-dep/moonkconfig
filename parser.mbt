@@ -106,6 +106,7 @@ pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
 ///|
 priv struct Scope {
   tag : String
+  choice_start : Int32
   start : Int32
   mut depends : Expr
   mut visible : Expr
@@ -124,6 +125,11 @@ fn close_scope(
   if scope.tag != expected {
     raise Invalid("mismatched scope terminator " + expected)
   }
+  for i in scope.choice_start..<schema.choices.length() {
+    let c = schema.choices[i]
+    c.depends = Conjunction(c.depends, scope.depends)
+    c.prompt_if = Conjunction(c.prompt_if, scope.visible)
+  }
   for i in scope.start..<schema.defs.length() {
     let d = schema.defs[i]
     d.depends = Conjunction(d.depends, scope.depends)
@@ -135,6 +141,7 @@ fn close_scope(
 fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
   let schema = Schema::new()
   let scopes : Array[Scope] = []
+  let mut active_choice : Int32? = None
   let mut current : Int32? = None
   let mut pos = 0
   while pos < lines.length() {
@@ -161,8 +168,68 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           if schema.defs.length() >= 4096 {
             raise Invalid("too many symbols")
           }
+          match active_choice {
+            Some(i) => schema.choices[i].members.push(ts[1].text)
+            None => ()
+          }
           schema.defs.push(definition(ts[1].text, None, line.location))
           current = Some(schema.defs.length() - 1)
+        }
+        "choice" => {
+          if active_choice != None {
+            raise Invalid("nested choices unsupported")
+          }
+          if ts.length() > 2 ||
+            (ts.length() == 2 && (ts[1].quoted || !identifier(ts[1].text))) {
+            raise Invalid("invalid choice declaration")
+          }
+          let name = if ts.length() == 2 {
+            ts[1].text
+          } else {
+            "choice_" + schema.choices.length().to_string()
+          }
+          if schema.choices.any(fn(c) { c.name == name }) {
+            raise Invalid("duplicate choice name")
+          }
+          schema.choices.push({
+            name,
+            prompt: None,
+            prompt_if: truth(),
+            depends: truth(),
+            optional: false,
+            defaults: [],
+            members: [],
+          })
+          active_choice = Some(schema.choices.length() - 1)
+          scopes.push({
+            tag: "endchoice",
+            start: schema.defs.length(),
+            choice_start: schema.choices.length(),
+            depends: truth(),
+            visible: truth(),
+          })
+          current = None
+        }
+        "endchoice" => {
+          if ts.length() != 1 {
+            raise Invalid("unexpected endchoice arguments")
+          }
+          let i = match active_choice {
+            Some(i) => i
+            None => raise Invalid("unmatched endchoice")
+          }
+          let c = schema.choices[i]
+          for name in c.members {
+            let d = schema.defs[schema.index(name)]
+            d.depends = Conjunction(d.depends, c.depends)
+            d.prompt_if = Conjunction(d.prompt_if, c.prompt_if)
+            if c.prompt == None {
+              d.prompt_if = Constant(Logic(N))
+            }
+          }
+          close_scope(schema, scopes, "endchoice")
+          active_choice = None
+          current = None
         }
         "if" | "menu" => {
           if scopes.length() >= 64 {
@@ -182,6 +249,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
             } else {
               "endmenu"
             },
+            choice_start: schema.choices.length(),
             start: schema.defs.length(),
             depends: dep,
             visible: truth(),
@@ -238,6 +306,12 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           match current {
             Some(i) => property(schema.defs[i], ts)
             None => {
+              if active_choice is Some(i) &&
+                !scopes.is_empty() &&
+                scopes[scopes.length() - 1].tag == "endchoice" {
+                choice_property(schema.choices[i], ts)
+                continue
+              }
               if scopes.is_empty() {
                 raise Invalid("property outside config/menu")
               }

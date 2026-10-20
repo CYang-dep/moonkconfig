@@ -36,11 +36,12 @@ fn definition(name : String, kind : Kind?, location : String) -> Definition {
 /// Opaque schema; callers cannot mutate internal dependency structures.
 pub struct Schema {
   priv defs : Array[Definition]
+  priv choices : Array[Choice]
 }
 
 ///|
 pub fn Schema::new() -> Schema {
-  { defs: [], }
+  { defs: [], choices: [], }
 }
 
 ///|
@@ -129,6 +130,27 @@ pub fn Schema::reverse_dependency(
 
 ///|
 pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
+  for c in self.choices {
+    if c.members.is_empty() {
+      raise Invalid("empty choice " + c.name)
+    }
+    for name in c.members {
+      let d = self.defs[self.index(name)]
+      if self.kind(name) != Boolean {
+        raise Invalid("only boolean choice members supported")
+      }
+      if !d.defaults.is_empty() {
+        raise Invalid(
+          "defaults on choice members unsupported; use choice default",
+        )
+      }
+    }
+    for (name, _) in c.defaults {
+      if !c.members.contains(name) {
+        raise Invalid("choice default must name a member")
+      }
+    }
+  }
   let module_symbols = self.defs.filter(fn(d) { d.modules })
   if module_symbols.length() > 1 {
     raise Invalid("multiple module switches")
@@ -143,6 +165,9 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       raise Invalid("select/imply source must be logical: " + d.name)
     }
     for edge in d.selects + d.implies {
+      if self.choices.any(fn(c) { c.members.contains(edge.0) }) {
+        raise Invalid("select/imply to choice member unsupported")
+      }
       let target_kind = self.kind(edge.0)
       if target_kind != Boolean && target_kind != Tristate {
         raise Invalid("select/imply target must be logical: " + edge.0)

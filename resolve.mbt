@@ -157,7 +157,6 @@ pub fn Schema::resolve(
   let reasons : Map[String, String] = Map([])
   for _ in 0..<(self.defs.length() * 4 + 32) {
     let next : Map[String, Value] = Map([])
-    let mut changed = false
     for d in self.defs {
       let kind = self.effective_kind(d.name, values)
       let (base, why) = base_value(self, d, kind, requests, values)
@@ -166,10 +165,9 @@ pub fn Schema::resolve(
       )
       next[d.name] = value
       reasons[d.name] = reason
-      if values.get(d.name) != Some(value) {
-        changed = true
-      }
     }
+    apply_choices(self, fragment, values, next, reasons)
+    let changed = self.defs.any(fn(d) { values.get(d.name) != next.get(d.name) })
     values = next
     if !changed {
       let visibility : Map[String, Tri] = Map([])
