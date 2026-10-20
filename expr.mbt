@@ -1,6 +1,7 @@
 ///|
 pub(all) enum Expr {
   Constant(Value)
+  NumericLiteral(String, Int64)
   SymbolRef(String)
   Negation(Expr)
   Conjunction(Expr, Expr)
@@ -68,6 +69,7 @@ pub fn parse_number(text : String) -> Int64 raise ConfigError {
 pub fn Expr::evaluate(self : Expr, values : Map[String, Value]) -> Value {
   match self {
     Constant(v) => v
+    NumericLiteral(_, n) => Number(n)
     SymbolRef(name) => values.get(name).unwrap_or(Text(name))
     Negation(a) => Logic(a.evaluate(values).logic().negate())
     Conjunction(a, b) =>
@@ -106,7 +108,7 @@ pub fn Expr::references(self : Expr) -> Array[String] {
         visit(a)
         visit(b)
       }
-      Constant(_) => ()
+      Constant(_) | NumericLiteral(_, _) => ()
     }
   }
   visit(self)

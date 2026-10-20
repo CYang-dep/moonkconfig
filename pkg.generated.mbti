@@ -50,6 +50,7 @@ pub fn ConfigChange::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Expr {
   Constant(Value)
+  NumericLiteral(String, Int64)
   SymbolRef(String)
   Negation(Expr)
   Conjunction(Expr, Expr)

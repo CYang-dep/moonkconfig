@@ -86,7 +86,10 @@ fn config_value(kind : Kind, raw : String) -> Value raise ConfigError {
       Text(ts[0].text)
     }
     Integer | Hex => {
-      let value = parse_number(raw)
+      if kind == Integer && (raw.contains("x") || raw.contains("X")) {
+        raise Invalid("integer assignments require decimal digits")
+      }
+      let value = if kind == Hex { parse_hex(raw) } else { parse_number(raw) }
       if kind == Hex && value < 0L {
         raise Invalid("hex assignment must be nonnegative")
       }

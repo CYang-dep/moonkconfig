@@ -10,7 +10,7 @@ fn Expr::validate_bounds(self : Expr) -> Unit raise ConfigError {
     }
     match expr {
       Constant(Text(text)) => ignore(quote_string(text))
-      Constant(_) | SymbolRef(_) => ()
+      Constant(_) | NumericLiteral(_, _) | SymbolRef(_) => ()
       Negation(a) => stack.push((a, depth + 1))
       Conjunction(a, b) | Disjunction(a, b) | Comparison(_, a, b) => {
         stack.push((a, depth + 1))

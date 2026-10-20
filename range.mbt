@@ -1,9 +1,10 @@
 ///|
 fn bound_number(
   expr : Expr,
+  kind : Kind,
   values : Map[String, Value],
 ) -> Int64 raise ConfigError {
-  match expr.evaluate(values) {
+  match expr.typed_value(kind, values) {
     Number(n) => n
     Unset => 0L
     Text(s) => if s.is_empty() { 0L } else { parse_number(s) }
@@ -23,8 +24,8 @@ fn active_range(
       .condition(values, modules)
       .meet(d.depends.condition(values, modules)) !=
       N {
-      let lo = bound_number(low, values)
-      let hi = bound_number(high, values)
+      let lo = bound_number(low, schema.kind(d.name), values)
+      let hi = bound_number(high, schema.kind(d.name), values)
       if lo > hi {
         raise Invalid("inverted active range: " + d.name)
       }

@@ -70,7 +70,7 @@ fn typed_default(value : Value, kind : Kind) -> Value raise ConfigError {
     StringType => Text(value.text())
     Integer | Hex =>
       match value {
-        Number(_) => value
+        Unset | Number(_) => value
         _ => Number(parse_number(value.text()))
       }
   }
@@ -122,7 +122,7 @@ fn base_value(
       .condition(values, schema.modules_enabled(values))
       .meet(d.depends.condition(values, schema.modules_enabled(values)))
     if active != N {
-      let raw = typed_default(expr.evaluate(values), kind)
+      let raw = expr.typed_value(kind, values)
       let value = clamp_default(schema, d, raw, values)
       return (
         match value {

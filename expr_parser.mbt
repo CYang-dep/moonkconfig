@@ -13,7 +13,7 @@ fn atom(token : Token) -> Expr raise ConfigError {
       }
       let c = s[0]
       if (c >= 48 && c <= 57) || c == 45 || c == 43 {
-        Constant(Number(parse_number(s)))
+        NumericLiteral(s, parse_number(s))
       } else if identifier(s) {
         SymbolRef(s)
       } else {
