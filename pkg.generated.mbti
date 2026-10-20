@@ -8,6 +8,8 @@ import {
 // Values
 pub fn identifier(String) -> Bool
 
+pub fn merge_fragments(Array[Fragment]) -> Fragment
+
 pub fn parse_conditional(String) -> (Expr, Expr) raise ConfigError
 
 pub fn parse_expression(String) -> Expr raise ConfigError
@@ -49,6 +51,12 @@ pub fn Expr::references(Self) -> Array[String]
 #deprecated
 pub fn Expr::to_repr(Self) -> @debug.Repr
 
+pub struct Fragment {
+  // private fields
+}
+pub fn Fragment::new() -> Self
+pub fn Fragment::values(Self) -> Map[String, Value]
+
 pub(all) enum Kind {
   Boolean
   Tristate
@@ -75,7 +83,9 @@ pub fn Schema::help(Self, String) -> String raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
 pub fn Schema::names(Self) -> Array[String]
 pub fn Schema::new() -> Self
+pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
 pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
+pub fn Schema::request(Self, Fragment, String, Value) -> Unit raise ConfigError
 pub fn Schema::reverse_dependency(Self, String, String, weak? : Bool, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::source_location(Self, String) -> String raise ConfigError
 pub fn Schema::validate(Self) -> Unit raise ConfigError
