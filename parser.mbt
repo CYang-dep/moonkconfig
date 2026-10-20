@@ -73,6 +73,16 @@ fn property(d : Definition, ts : Array[Token]) -> Unit raise ConfigError {
         d.implies.push((names[0].text, cond))
       }
     }
+    "option" | "modules" => {
+      if (
+          ts[0].text == "option" &&
+          (ts.length() != 2 || ts[1].text != "modules")
+        ) ||
+        (ts[0].text == "modules" && ts.length() != 1) {
+        raise Invalid("only option modules is supported")
+      }
+      d.modules = true
+    }
     "range" => {
       let (bounds, cond) = conditional(ts, 1)
       if bounds.length() != 2 {

@@ -12,7 +12,9 @@ fn reverse_strength(
     for (name, condition) in edges {
       if name == target {
         strength = strength.join(
-          source_value.meet(condition.evaluate(values).logic()),
+          source_value.meet(
+            condition.condition(values, schema.modules_enabled(values)),
+          ),
         )
       }
     }
@@ -36,11 +38,11 @@ fn apply_reverse(
   let strong = reverse_strength(schema, d.name, values, false)
   let weak = reverse_strength(schema, d.name, values, true)
   let user = requests.contains(d.name) &&
-    direct_visibility(d, kind, values) != N
+    direct_visibility(schema, d, kind, values) != N
   let mut value = base.logic()
   let mut why = reason
   if !user &&
-    d.depends.evaluate(values).logic() != N &&
+    d.depends.condition(values, schema.modules_enabled(values)) != N &&
     weak.rank() > value.rank() {
     value = weak
     why = "imply"

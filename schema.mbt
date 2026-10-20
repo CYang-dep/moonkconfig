@@ -9,6 +9,7 @@ priv struct Definition {
   selects : Array[(String, Expr)]
   implies : Array[(String, Expr)]
   ranges : Array[(Expr, Expr, Expr)]
+  mut modules : Bool
   mut help : String
   location : String
 }
@@ -25,6 +26,7 @@ fn definition(name : String, kind : Kind?, location : String) -> Definition {
     selects: [],
     implies: [],
     ranges: [],
+    modules: false,
     help: "",
     location,
   }
@@ -127,8 +129,15 @@ pub fn Schema::reverse_dependency(
 
 ///|
 pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
+  let module_symbols = self.defs.filter(fn(d) { d.modules })
+  if module_symbols.length() > 1 {
+    raise Invalid("multiple module switches")
+  }
   for d in self.defs {
     let kind = self.kind(d.name)
+    if d.modules && kind != Boolean {
+      raise Invalid("module switch must be bool")
+    }
     if (kind == StringType || kind == Integer || kind == Hex) &&
       (!d.selects.is_empty() || !d.implies.is_empty()) {
       raise Invalid("select/imply source must be logical: " + d.name)

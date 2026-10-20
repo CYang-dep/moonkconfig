@@ -78,6 +78,7 @@ fn typed_default(value : Value, kind : Kind) -> Value raise ConfigError {
 
 ///|
 fn direct_visibility(
+  schema : Schema,
   d : Definition,
   kind : Kind,
   values : Map[String, Value],
@@ -89,7 +90,7 @@ fn direct_visibility(
       d.depends
       .evaluate(values)
       .logic()
-      .meet(d.prompt_if.evaluate(values).logic()),
+      .meet(d.prompt_if.condition(values, schema.modules_enabled(values))),
       kind,
     )
   }
@@ -97,12 +98,13 @@ fn direct_visibility(
 
 ///|
 fn base_value(
+  schema : Schema,
   d : Definition,
   kind : Kind,
   requests : Map[String, Value],
   values : Map[String, Value],
 ) -> (Value, String) raise ConfigError {
-  let visible = direct_visibility(d, kind, values)
+  let visible = direct_visibility(schema, d, kind, values)
   match requests.get(d.name) {
     Some(v) =>
       if visible != N {
@@ -120,7 +122,7 @@ fn base_value(
     let active = condition
       .evaluate(values)
       .logic()
-      .meet(d.depends.evaluate(values).logic())
+      .meet(d.depends.condition(values, schema.modules_enabled(values)))
     if active != N {
       let value = typed_default(expr.evaluate(values), kind)
       return (
@@ -157,8 +159,8 @@ pub fn Schema::resolve(
     let next : Map[String, Value] = Map([])
     let mut changed = false
     for d in self.defs {
-      let kind = self.kind(d.name)
-      let (base, why) = base_value(d, kind, requests, values)
+      let kind = self.effective_kind(d.name, values)
+      let (base, why) = base_value(self, d, kind, requests, values)
       let (value, reason) = apply_reverse(
         self, d, kind, base, why, requests, values,
       )
@@ -174,10 +176,16 @@ pub fn Schema::resolve(
       let messages = []
       for d in self.defs {
         let strong = reverse_strength(self, d.name, values, false)
-        if strong.rank() > d.depends.evaluate(values).logic().rank() {
+        if strong.rank() >
+          d.depends.condition(values, self.modules_enabled(values)).rank() {
           messages.push("select bypasses dependencies: " + d.name)
         }
-        visibility[d.name] = direct_visibility(d, self.kind(d.name), values)
+        visibility[d.name] = direct_visibility(
+          self,
+          d,
+          self.effective_kind(d.name, values),
+          values,
+        )
         match requests.get(d.name) {
           Some(wanted) =>
             if values.get(d.name) != Some(wanted) {

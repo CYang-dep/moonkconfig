@@ -17,7 +17,7 @@ test "select overrides unmet dependencies while imply respects user veto" {
 ///|
 test "conditional reverse dependency strengths follow the tristate lattice" {
   let s = parse_kconfig(
-    "config S\n tristate\n default m\n select T if y\nconfig T\n tristate",
+    "config MODULES\n bool\n option modules\n default y\nconfig S\n tristate\n default m\n select T if y\nconfig T\n tristate",
   )
   assert_eq(s.resolve(Fragment::new()).value("T"), Logic(M))
 }
