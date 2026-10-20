@@ -1,0 +1,68 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "CYang-dep/moonkconfig"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn parse_tri(String) -> Tri raise ConfigError
+
+// Errors
+pub suberror ConfigError {
+  Invalid(String)
+} derive(@debug.Debug)
+#deprecated
+pub fn ConfigError::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub(all) enum Kind {
+  Boolean
+  Tristate
+  StringType
+  Integer
+  Hex
+} derive(Eq, @debug.Debug)
+pub fn Kind::accepts(Self, Value) -> Bool
+#deprecated
+pub fn Kind::equal(Self, Self) -> Bool
+pub fn Kind::initial(Self) -> Value
+#deprecated
+pub fn Kind::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn Kind::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Tri {
+  N
+  M
+  Y
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Tri::equal(Self, Self) -> Bool
+pub fn Tri::join(Self, Self) -> Self
+pub fn Tri::meet(Self, Self) -> Self
+pub fn Tri::negate(Self) -> Self
+#deprecated
+pub fn Tri::not_equal(Self, Self) -> Bool
+pub fn Tri::rank(Self) -> Int
+pub fn Tri::text(Self) -> String
+#deprecated
+pub fn Tri::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Value {
+  Logic(Tri)
+  Text(String)
+  Number(Int64)
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn Value::equal(Self, Self) -> Bool
+pub fn Value::logic(Self) -> Tri
+#deprecated
+pub fn Value::not_equal(Self, Self) -> Bool
+pub fn Value::text(Self) -> String
+#deprecated
+pub fn Value::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
