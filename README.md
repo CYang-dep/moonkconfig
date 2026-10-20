@@ -130,3 +130,7 @@ python tools/audit.py
 原创实现采用 [Apache-2.0](LICENSE)。语言规则参考 Linux Kconfig 文档；独立测试对照 [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) 14.1.0（ISC）。没有复制 Linux 实现、Kconfiglib 代码或上游测试夹具；上游不作为运行依赖或打包源码。参考版本、许可证边界和工具链信息见 [NOTICE](NOTICE.md)。
 
 项目使用 AI 辅助进行选题调研、实现、测试与文档编写；发布依据是实际运行的检查、差分和 CI，不把 AI 推断写成兼容性保证。有限生态检查及被否决方向见 [公开查重记录](docs/competition/duplicate-check.md)。
+
+## 公开验证记录
+
+[四后端 CI](https://github.com/CYang-dep/moonkconfig/actions/runs/39398377786) 在官方 `moon 0.1.20261016` / `moonc v0.10.16+b1a0e846e` 下完成 wasm-gc、wasm、js、native 的严格检查、38 项常驻测试、构建、四个示例，以及每后端 98 个原创场景 / 1286 项差分断言。构建记录只证明所列版本和测试范围，不代表完整 Kconfig 语言兼容。

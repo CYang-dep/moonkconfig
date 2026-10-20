@@ -40,6 +40,6 @@
 - GitHub 相同三个 Kconfig/tristate 查询再次返回 0 个仓库；Moon search kconfig/menuconfig/tristate 分别为 2/0/4，仍为前述算法、图像、SDK/TUI等无关三态，未出现可替代的 Kconfig 引擎。排除自身预留；不能保证未索引、私有或此后新出现的项目。
 - 再读永久注册表，Kconfig 相关项仍为 MoonWire 的未预留替代建议及本项目预留，没有将近邻改名规避。
 - 交付核心涵盖三态/类型/内存源树、继承依赖、默认与反向依赖、模块开关、布尔 choice、数值范围和配置导出。三个外部包示例分别实际执行固件头文件构建、产品覆盖/差异/精简、UI 元数据及请求转移；中文快速开始亦作为独立包运行。
-- Kconfiglib 14.1.0 的 98 个原创场景、1286 项断言在 wasm-gc/wasm/js 本地通过，比较值、可见性及本库回读；Native 运行交由 Ubuntu 公开 CI，只有真实通过后才发布。
+- Kconfiglib 14.1.0 的 98 个原创场景、1286 项断言在 wasm-gc/wasm/js 本地通过，比较值、可见性及本库回读；wasm-gc/wasm/js/native 四后端的严格检查、常驻测试、构建、四个独立示例及相同差分均已在 [Ubuntu 公开 CI](https://github.com/CYang-dep/moonkconfig/actions/runs/39398377786) 通过。后续文档变更也须再次通过 CI 才发布。
 - 核心物理代码行 2166；进一步去除纯界符行后 1685，不含测试、示例、生成接口、兼容 pub extend 块、空行、注释、Python工具或文档。工程提交由 tools/audit.py 按实际改动 .mbt 的历史保守统计，文档-only 不计。
 - 不支持完整 Linux/Zephyr 树、预处理、同名重复定义和 tristate choice；这限制兼容性范围，但不删去上述三类下游任务的核心闭环。不以“未发现”证明唯一或获得比赛认可。
