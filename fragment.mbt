@@ -34,8 +34,11 @@ pub fn Schema::request(
   }
   for i, entry in requests.entries {
     if entry.0 == name {
-      requests.entries[i] = (name, value)
-      return
+      for j in i..<(requests.entries.length() - 1) {
+        requests.entries[j] = requests.entries[j + 1]
+      }
+      ignore(requests.entries.pop())
+      break
     }
   }
   requests.entries.push((name, value))
@@ -47,17 +50,16 @@ pub fn merge_fragments(fragments : Array[Fragment]) -> Fragment {
   let out = Fragment::new()
   for fragment in fragments {
     for entry in fragment.entries {
-      let mut replaced = false
       for i, previous in out.entries {
         if previous.0 == entry.0 {
-          out.entries[i] = entry
-          replaced = true
+          for j in i..<(out.entries.length() - 1) {
+            out.entries[j] = out.entries[j + 1]
+          }
+          ignore(out.entries.pop())
           break
         }
       }
-      if !replaced {
-        out.entries.push(entry)
-      }
+      out.entries.push(entry)
     }
   }
   out

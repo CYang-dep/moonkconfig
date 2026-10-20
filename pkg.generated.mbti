@@ -123,6 +123,7 @@ pub fn Schema::export_config(Self, Resolution) -> String raise ConfigError
 pub fn Schema::export_fragment(Self, Fragment) -> String raise ConfigError
 pub fn Schema::export_header(Self, Resolution) -> String raise ConfigError
 pub fn Schema::help(Self, String) -> String raise ConfigError
+pub fn Schema::inspect(Self, Resolution) -> Array[SymbolView] raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
 pub fn Schema::minimal_fragment(Self, Resolution) -> Fragment raise ConfigError
 pub fn Schema::names(Self) -> Array[String]
@@ -130,10 +131,30 @@ pub fn Schema::new() -> Self
 pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
 pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
 pub fn Schema::request(Self, Fragment, String, Value) -> Unit raise ConfigError
+pub fn Schema::request_options(Self, Fragment, String) -> Array[Value] raise ConfigError
 pub fn Schema::resolve(Self, Fragment) -> Resolution raise ConfigError
 pub fn Schema::reverse_dependency(Self, String, String, weak? : Bool, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::source_location(Self, String) -> String raise ConfigError
 pub fn Schema::validate(Self) -> Unit raise ConfigError
+
+pub(all) struct SymbolView {
+  name : String
+  kind : Kind
+  value : Value
+  prompt : String?
+  help : String
+  visibility : Tri
+  reason : String
+  location : String
+  dependencies : Array[String]
+  numeric_range : (Int64, Int64)?
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn SymbolView::equal(Self, Self) -> Bool
+#deprecated
+pub fn SymbolView::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn SymbolView::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Token {
   text : String
