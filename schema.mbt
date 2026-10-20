@@ -9,6 +9,7 @@ priv struct Definition {
   selects : Array[(String, Expr)]
   implies : Array[(String, Expr)]
   ranges : Array[(Expr, Expr, Expr)]
+  mut help : String
   location : String
 }
 
@@ -24,6 +25,7 @@ fn definition(name : String, kind : Kind?, location : String) -> Definition {
     selects: [],
     implies: [],
     ranges: [],
+    help: "",
     location,
   }
 }
@@ -158,4 +160,9 @@ pub fn Schema::source_location(
   name : String,
 ) -> String raise ConfigError {
   self.defs[self.index(name)].location
+}
+
+///|
+pub fn Schema::help(self : Schema, name : String) -> String raise ConfigError {
+  self.defs[self.index(name)].help
 }

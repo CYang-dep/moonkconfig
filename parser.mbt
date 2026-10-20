@@ -18,7 +18,7 @@ fn set_prompt(
     raise Invalid("expected one unique quoted prompt")
   }
   d.prompt = Some(p[0].text)
-  d.prompt_if = cond
+  d.prompt_if = Conjunction(d.prompt_if, cond)
 }
 
 ///|
@@ -94,10 +94,42 @@ pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
 }
 
 ///|
+priv struct Scope {
+  tag : String
+  start : Int32
+  mut depends : Expr
+  mut visible : Expr
+}
+
+///|
+fn close_scope(
+  schema : Schema,
+  scopes : Array[Scope],
+  expected : String,
+) -> Unit raise ConfigError {
+  let scope = match scopes.pop() {
+    Some(s) => s
+    None => raise Invalid("unmatched " + expected)
+  }
+  if scope.tag != expected {
+    raise Invalid("mismatched scope terminator " + expected)
+  }
+  for i in scope.start..<schema.defs.length() {
+    let d = schema.defs[i]
+    d.depends = Conjunction(d.depends, scope.depends)
+    d.prompt_if = Conjunction(d.prompt_if, scope.visible)
+  }
+}
+
+///|
 fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
   let schema = Schema::new()
+  let scopes : Array[Scope] = []
   let mut current : Int32? = None
-  for line in lines {
+  let mut pos = 0
+  while pos < lines.length() {
+    let line = lines[pos]
+    pos += 1
     let ts = tokenize(line.text)
     if ts.is_empty() {
       continue
@@ -119,19 +151,116 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           if schema.defs.length() >= 4096 {
             raise Invalid("too many symbols")
           }
-          let d = definition(ts[1].text, None, line.location)
-          schema.defs.push(d)
+          schema.defs.push(definition(ts[1].text, None, line.location))
           current = Some(schema.defs.length() - 1)
+        }
+        "if" | "menu" => {
+          if scopes.length() >= 64 {
+            raise Invalid("scope nesting exceeds 64")
+          }
+          let dep = if ts[0].text == "if" {
+            parse_expression_tokens(suffix(ts, 1))
+          } else {
+            if ts.length() != 2 || !ts[1].quoted {
+              raise Invalid("menu needs quoted title")
+            }
+            truth()
+          }
+          scopes.push({
+            tag: if ts[0].text == "if" {
+              "endif"
+            } else {
+              "endmenu"
+            },
+            start: schema.defs.length(),
+            depends: dep,
+            visible: truth(),
+          })
+          current = None
+        }
+        "endif" | "endmenu" => {
+          if ts.length() != 1 {
+            raise Invalid("unexpected terminator arguments")
+          }
+          close_scope(schema, scopes, ts[0].text)
+          current = None
+        }
+        "mainmenu" | "comment" => {
+          if ts.length() != 2 || !ts[1].quoted {
+            raise Invalid("expected quoted title")
+          }
+          current = None
+        }
+        "help" | "---help---" => {
+          if ts.length() != 1 {
+            raise Invalid("unexpected help arguments")
+          }
+          let index = match current {
+            Some(i) => i
+            None => raise Invalid("help outside symbol")
+          }
+          let base = indentation(line.text)
+          let parts : Array[String] = []
+          let mut margin = -1
+          while pos < lines.length() {
+            let next = lines[pos].text
+            if !next.trim().is_empty() && indentation(next) <= base {
+              break
+            }
+            if !next.trim().is_empty() && margin < 0 {
+              margin = indentation(next)
+            }
+            if next.trim().is_empty() {
+              parts.push("")
+            } else {
+              let begin = if indentation(next) < margin {
+                indentation(next)
+              } else {
+                margin
+              }
+              parts.push(next[begin:].to_owned())
+            }
+            pos += 1
+          }
+          schema.defs[index].help = parts.join("\n").trim().to_owned()
         }
         _ =>
           match current {
             Some(i) => property(schema.defs[i], ts)
-            None => raise Invalid("property outside config")
+            None => {
+              if scopes.is_empty() {
+                raise Invalid("property outside config/menu")
+              }
+              let scope = scopes[scopes.length() - 1]
+              if scope.tag != "endmenu" || scope.start != schema.defs.length() {
+                raise Invalid("property outside menu header")
+              }
+              if ts[0].text == "depends" &&
+                ts.length() > 2 &&
+                ts[1].text == "on" {
+                scope.depends = Conjunction(
+                  scope.depends,
+                  parse_expression_tokens(suffix(ts, 2)),
+                )
+              } else if ts[0].text == "visible" &&
+                ts.length() > 2 &&
+                ts[1].text == "if" {
+                scope.visible = Conjunction(
+                  scope.visible,
+                  parse_expression_tokens(suffix(ts, 2)),
+                )
+              } else {
+                raise Invalid("unsupported menu property")
+              }
+            }
           }
       }
     } catch {
       Invalid(msg) => raise Invalid(line.location + ": " + msg)
     }
+  }
+  if !scopes.is_empty() {
+    raise Invalid("unterminated Kconfig scope")
   }
   schema.validate()
   schema
