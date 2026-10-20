@@ -72,7 +72,14 @@ fn apply_choices(
       direct_visibility(schema, d, Boolean, previous) != N
     })
     let mut selected : String? = None
-    if visibility != N {
+    let enabled = visibility != N &&
+      (
+        !c.optional ||
+        requests.entries.any(fn(e) {
+          c.members.contains(e.0) && e.1 == Logic(Y)
+        })
+      )
+    if enabled {
       for (name, value) in requests.entries {
         if c.members.contains(name) &&
           visible_members.contains(name) &&
@@ -80,7 +87,7 @@ fn apply_choices(
           selected = Some(name)
         }
       }
-      if selected == None && !c.optional {
+      if selected == None {
         for (name, cond) in c.defaults {
           if cond.condition(previous, modules) != N &&
             visible_members.contains(name) {

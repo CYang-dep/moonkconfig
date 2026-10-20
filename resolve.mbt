@@ -56,7 +56,7 @@ pub fn Resolution::diagnostics(self : Resolution) -> Array[String] {
 
 ///|
 fn logical_bound(value : Tri, kind : Kind) -> Tri {
-  if kind == Boolean && value == M {
+  if kind != Tristate && value == M {
     Y
   } else {
     value
@@ -189,6 +189,17 @@ pub fn Schema::resolve(
               messages.push("request constrained: " + d.name)
             }
           None => ()
+        }
+      }
+      for c in self.choices {
+        let mode = !c.optional ||
+          fragment.entries.any(fn(e) {
+            c.members.contains(e.0) && e.1 == Logic(Y)
+          })
+        if !mode {
+          for name in c.members {
+            visibility[name] = N
+          }
         }
       }
       return { values, visibility, reasons, messages, }
