@@ -88,8 +88,7 @@ fn direct_visibility(
   } else {
     logical_bound(
       d.depends
-      .evaluate(values)
-      .logic()
+      .condition(values, schema.modules_enabled(values))
       .meet(d.prompt_if.condition(values, schema.modules_enabled(values))),
       kind,
     )
@@ -107,7 +106,7 @@ fn base_value(
   let visible = direct_visibility(schema, d, kind, values)
   match requests.get(d.name) {
     Some(v) =>
-      if visible != N {
+      if visible != N && request_in_range(schema, d, v, values) {
         return (
           match v {
             Logic(t) => Logic(logical_bound(t.meet(visible), kind))
@@ -120,11 +119,11 @@ fn base_value(
   }
   for (expr, condition) in d.defaults {
     let active = condition
-      .evaluate(values)
-      .logic()
+      .condition(values, schema.modules_enabled(values))
       .meet(d.depends.condition(values, schema.modules_enabled(values)))
     if active != N {
-      let value = typed_default(expr.evaluate(values), kind)
+      let raw = typed_default(expr.evaluate(values), kind)
+      let value = clamp_default(schema, d, raw, values)
       return (
         match value {
           Logic(t) => Logic(logical_bound(t.meet(active), kind))
@@ -134,7 +133,7 @@ fn base_value(
       )
     }
   }
-  (kind.initial(), "initial")
+  (clamp_default(schema, d, kind.initial(), values), "initial")
 }
 
 ///|

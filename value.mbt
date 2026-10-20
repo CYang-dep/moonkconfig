@@ -68,6 +68,7 @@ pub fn parse_tri(text : String) -> Tri raise ConfigError {
 
 ///|
 pub(all) enum Value {
+  Unset
   Logic(Tri)
   Text(String)
   Number(Int64)
@@ -76,6 +77,7 @@ pub(all) enum Value {
 ///|
 pub fn Value::text(self : Value) -> String {
   match self {
+    Unset => ""
     Logic(t) => t.text()
     Text(s) => s
     Number(n) => n.to_string()
@@ -104,7 +106,7 @@ pub fn Kind::initial(self : Kind) -> Value {
   match self {
     Boolean | Tristate => Logic(N)
     StringType => Text("")
-    Integer | Hex => Number(0L)
+    Integer | Hex => Unset
   }
 }
 

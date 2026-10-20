@@ -132,6 +132,7 @@ pub fn Tri::text(Self) -> String
 pub fn Tri::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Value {
+  Unset
   Logic(Tri)
   Text(String)
   Number(Int64)
