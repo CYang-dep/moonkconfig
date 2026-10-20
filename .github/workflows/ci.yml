@@ -1,0 +1,47 @@
+name: portable-validation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [wasm-gc, wasm, js, native]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install official stable MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Record toolchain
+        run: moon version --all
+      - name: Verify public interfaces and formatting
+        run: |
+          moon info
+          moon fmt --check
+          git diff --exit-code -- '*.mbti'
+      - name: Strict checks tests and build
+        run: |
+          moon check --deny-warn --target ${{ matrix.target }}
+          moon test --deny-warn --target ${{ matrix.target }}
+          moon build --deny-warn --target ${{ matrix.target }}
+      - name: Public integration workflows
+        run: |
+          moon run examples/firmware --target ${{ matrix.target }}
+          moon run examples/variants --target ${{ matrix.target }}
+          moon run examples/ui --target ${{ matrix.target }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pinned independent differential oracle
+        run: |
+          python -m pip install kconfiglib==14.1.0
+          python tools/differential.py --target ${{ matrix.target }}
+      - name: Conservative source and meaningful history audit
+        run: python tools/audit.py
