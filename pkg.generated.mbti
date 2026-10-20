@@ -73,6 +73,15 @@ pub fn Kind::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Kind::to_repr(Self) -> @debug.Repr
 
+pub struct Resolution {
+  // private fields
+}
+pub fn Resolution::diagnostics(Self) -> Array[String]
+pub fn Resolution::reason(Self, String) -> String raise ConfigError
+pub fn Resolution::value(Self, String) -> Value raise ConfigError
+pub fn Resolution::values(Self) -> Map[String, Value]
+pub fn Resolution::visibility(Self, String) -> Tri raise ConfigError
+
 pub struct Schema {
   // private fields
 }
@@ -86,6 +95,7 @@ pub fn Schema::new() -> Self
 pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
 pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
 pub fn Schema::request(Self, Fragment, String, Value) -> Unit raise ConfigError
+pub fn Schema::resolve(Self, Fragment) -> Resolution raise ConfigError
 pub fn Schema::reverse_dependency(Self, String, String, weak? : Bool, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::source_location(Self, String) -> String raise ConfigError
 pub fn Schema::validate(Self) -> Unit raise ConfigError
