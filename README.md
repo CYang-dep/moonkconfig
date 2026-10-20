@@ -27,7 +27,7 @@ MoonBit 编写的、可嵌入的构建配置引擎。版本 **0.1.0**，模块 `
 
 ## 安装与环境
 
-安装官方 MoonBit 工具链。本地验证基线为 `moon 0.1.20261012` / `moonc v0.10.15+943464bfa`；CI 记录实际 stable 工具链。库仅依赖官方 core，不需要 Kconfiglib/Python；Python 只用于开发时独立测试。
+安装官方 MoonBit 工具链。本地验证基线为 `moon 0.1.20261016` / `moonc v0.10.16+b1a0e846e`；CI 记录实际 stable 工具链。库仅依赖官方 core，不需要 Kconfiglib/Python；Python 只用于开发时独立测试。
 
 在宿主模块中固定版本：
 

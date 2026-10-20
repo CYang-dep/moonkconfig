@@ -92,7 +92,7 @@ pub(all) struct OverlayConflict {
   name : String
   previous : Value
   replacement : Value
-  fragment_index : Int
+  fragment_index : Int32
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn OverlayConflict::equal(Self, Self) -> Bool
@@ -160,7 +160,7 @@ pub fn SymbolView::to_repr(Self) -> @debug.Repr
 pub(all) struct Token {
   text : String
   quoted : Bool
-  offset : Int
+  offset : Int32
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Token::equal(Self, Self) -> Bool
@@ -181,7 +181,7 @@ pub fn Tri::meet(Self, Self) -> Self
 pub fn Tri::negate(Self) -> Self
 #deprecated
 pub fn Tri::not_equal(Self, Self) -> Bool
-pub fn Tri::rank(Self) -> Int
+pub fn Tri::rank(Self) -> Int32
 pub fn Tri::text(Self) -> String
 #deprecated
 pub fn Tri::to_repr(Self) -> @debug.Repr
