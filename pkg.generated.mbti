@@ -8,6 +8,10 @@ import {
 // Values
 pub fn identifier(String) -> Bool
 
+pub fn parse_conditional(String) -> (Expr, Expr) raise ConfigError
+
+pub fn parse_expression(String) -> Expr raise ConfigError
+
 pub fn parse_number(String) -> Int64 raise ConfigError
 
 pub fn parse_tri(String) -> Tri raise ConfigError
