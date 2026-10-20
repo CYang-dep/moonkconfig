@@ -90,3 +90,5 @@ config UNKNOWN
  bool
  default y if UNDEFINED = "UNDEFINED"
 ''',''
+
+    yield 'typed-unprefixed-hex', "config H\n hex \"H\"\n range 10 ff\n default 20\nconfig T\n string\n default 0x20\n", 'CONFIG_H=12\n'
