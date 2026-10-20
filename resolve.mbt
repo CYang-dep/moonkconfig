@@ -157,7 +157,11 @@ pub fn Schema::resolve(
     let next : Map[String, Value] = Map([])
     let mut changed = false
     for d in self.defs {
-      let (value, reason) = base_value(d, self.kind(d.name), requests, values)
+      let kind = self.kind(d.name)
+      let (base, why) = base_value(d, kind, requests, values)
+      let (value, reason) = apply_reverse(
+        self, d, kind, base, why, requests, values,
+      )
       next[d.name] = value
       reasons[d.name] = reason
       if values.get(d.name) != Some(value) {
@@ -169,6 +173,10 @@ pub fn Schema::resolve(
       let visibility : Map[String, Tri] = Map([])
       let messages = []
       for d in self.defs {
+        let strong = reverse_strength(self, d.name, values, false)
+        if strong.rank() > d.depends.evaluate(values).logic().rank() {
+          messages.push("select bypasses dependencies: " + d.name)
+        }
         visibility[d.name] = direct_visibility(d, self.kind(d.name), values)
         match requests.get(d.name) {
           Some(wanted) =>
