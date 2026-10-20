@@ -90,12 +90,15 @@ pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
   if text.length() > 4194304 {
     raise Invalid("Kconfig input exceeds 4 Mi UTF-16 units")
   }
+  parse_lines(logical_lines(text, "Kconfig"))
+}
+
+///|
+fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
   let schema = Schema::new()
   let mut current : Int32? = None
-  let mut line_no = 0
-  for line in text.split("\n") {
-    line_no += 1
-    let ts = tokenize(line.to_owned())
+  for line in lines {
+    let ts = tokenize(line.text)
     if ts.is_empty() {
       continue
     }
@@ -116,7 +119,7 @@ pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
           if schema.defs.length() >= 4096 {
             raise Invalid("too many symbols")
           }
-          let d = definition(ts[1].text, None, "Kconfig:\{line_no}")
+          let d = definition(ts[1].text, None, line.location)
           schema.defs.push(d)
           current = Some(schema.defs.length() - 1)
         }
@@ -127,7 +130,7 @@ pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
           }
       }
     } catch {
-      Invalid(msg) => raise Invalid("line \{line_no}: " + msg)
+      Invalid(msg) => raise Invalid(line.location + ": " + msg)
     }
   }
   schema.validate()
