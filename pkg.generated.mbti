@@ -61,6 +61,20 @@ pub fn Kind::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Kind::to_repr(Self) -> @debug.Repr
 
+pub struct Schema {
+  // private fields
+}
+pub fn Schema::add(Self, String, Kind, prompt? : String) -> Unit raise ConfigError
+pub fn Schema::default_value(Self, String, Expr, condition? : Expr) -> Unit raise ConfigError
+pub fn Schema::dependency(Self, String, Expr) -> Unit raise ConfigError
+pub fn Schema::kind(Self, String) -> Kind raise ConfigError
+pub fn Schema::names(Self) -> Array[String]
+pub fn Schema::new() -> Self
+pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
+pub fn Schema::reverse_dependency(Self, String, String, weak? : Bool, condition? : Expr) -> Unit raise ConfigError
+pub fn Schema::source_location(Self, String) -> String raise ConfigError
+pub fn Schema::validate(Self) -> Unit raise ConfigError
+
 pub(all) struct Token {
   text : String
   quoted : Bool
