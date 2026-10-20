@@ -10,6 +10,8 @@ pub fn identifier(String) -> Bool
 
 pub fn merge_fragments(Array[Fragment]) -> Fragment
 
+pub fn overlay_conflicts(Array[Fragment]) -> Array[OverlayConflict]
+
 pub fn parse_conditional(String) -> (Expr, Expr) raise ConfigError
 
 pub fn parse_expression(String) -> Expr raise ConfigError
@@ -34,6 +36,18 @@ pub suberror ConfigError {
 pub fn ConfigError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
+pub(all) struct ConfigChange {
+  name : String
+  before : Value
+  after : Value
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn ConfigChange::equal(Self, Self) -> Bool
+#deprecated
+pub fn ConfigChange::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn ConfigChange::to_repr(Self) -> @debug.Repr
+
 pub(all) enum Expr {
   Constant(Value)
   SymbolRef(String)
@@ -73,6 +87,19 @@ pub fn Kind::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn Kind::to_repr(Self) -> @debug.Repr
 
+pub(all) struct OverlayConflict {
+  name : String
+  previous : Value
+  replacement : Value
+  fragment_index : Int
+} derive(Eq, @debug.Debug)
+#deprecated
+pub fn OverlayConflict::equal(Self, Self) -> Bool
+#deprecated
+pub fn OverlayConflict::not_equal(Self, Self) -> Bool
+#deprecated
+pub fn OverlayConflict::to_repr(Self) -> @debug.Repr
+
 pub struct Resolution {
   // private fields
 }
@@ -86,15 +113,18 @@ pub struct Schema {
   // private fields
 }
 pub fn Schema::add(Self, String, Kind, prompt? : String) -> Unit raise ConfigError
+pub fn Schema::changes(Self, Resolution, Resolution) -> Array[ConfigChange] raise ConfigError
 pub fn Schema::choice_members(Self, String) -> Array[String] raise ConfigError
 pub fn Schema::choice_names(Self) -> Array[String]
 pub fn Schema::default_value(Self, String, Expr, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::dependency(Self, String, Expr) -> Unit raise ConfigError
 pub fn Schema::dependency_order(Self) -> Array[String] raise ConfigError
 pub fn Schema::export_config(Self, Resolution) -> String raise ConfigError
+pub fn Schema::export_fragment(Self, Fragment) -> String raise ConfigError
 pub fn Schema::export_header(Self, Resolution) -> String raise ConfigError
 pub fn Schema::help(Self, String) -> String raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
+pub fn Schema::minimal_fragment(Self, Resolution) -> Fragment raise ConfigError
 pub fn Schema::names(Self) -> Array[String]
 pub fn Schema::new() -> Self
 pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
