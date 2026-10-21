@@ -118,3 +118,5 @@ config UNKNOWN
 
     yield 'macro-quoted-output-is-data', 'V = a"b\nconfig X\n string\n default "$(V)"\n', ''
     yield 'macro-dashed-function', 'join-text = $(1)-$(2)\nconfig X\n string\n default "$(join-text,a,b)"\n', ''
+
+    yield 'select-forced-source-local-dep', 'config FORCE\n bool\n default y\n select S\nconfig S\n bool\n depends on n\n select T\nconfig T\n bool\n', ''

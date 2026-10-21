@@ -6,6 +6,12 @@ fn merge_declarations(parsed : Schema) -> Schema raise ConfigError {
   let out = Schema::new()
   for node in parsed.defs {
     if parsed.defs.filter(fn(d) { d.name == node.name }).length() == 1 {
+      for i, edge in node.selects {
+        node.selects[i] = (edge.0, Conjunction(node.depends, edge.1))
+      }
+      for i, edge in node.implies {
+        node.implies[i] = (edge.0, Conjunction(node.depends, edge.1))
+      }
       out.defs.push(node)
       continue
     }

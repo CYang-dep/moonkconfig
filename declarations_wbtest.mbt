@@ -25,3 +25,13 @@ test "cross-file declarations merge local dependencies and ordered defaults" {
   )
   assert_eq(requested.value("SHARED"), Number(37L))
 }
+
+///|
+test "a forced select source cannot escape its declaration-local edge guard" {
+  let schema = parse_kconfig(
+    "config FORCE\n bool\n default y\n select S\nconfig S\n bool\n depends on n\n select T\nconfig T\n bool\n",
+  )
+  let result = schema.resolve(Fragment::new())
+  assert_eq(result.value("S"), Logic(Y))
+  assert_eq(result.value("T"), Logic(N))
+}
