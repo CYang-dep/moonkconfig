@@ -72,6 +72,8 @@ pub(all) enum Value {
   Logic(Tri)
   Text(String)
   Number(Int64)
+  /// Source spelling and declared numeric type in the Linux v6.12 profile.
+  RawNumber(String, Kind)
 } derive(Eq, Debug)
 
 ///|
@@ -81,6 +83,7 @@ pub fn Value::text(self : Value) -> String {
     Logic(t) => t.text()
     Text(s) => s
     Number(n) => n.to_string()
+    RawNumber(raw, _) => raw
   }
 }
 
@@ -117,6 +120,8 @@ pub fn Kind::accepts(self : Kind, value : Value) -> Bool {
     (Boolean | Tristate, Logic(_)) => true
     (StringType, Text(_)) => true
     (Integer | Hex, Number(_)) => true
+    (Integer, RawNumber(raw, Integer)) => valid_linux_number(raw, Integer)
+    (Hex, RawNumber(raw, Hex)) => valid_linux_number(raw, Hex)
     _ => false
   }
 }

@@ -3,7 +3,16 @@ fn bound_number(
   expr : Expr,
   kind : Kind,
   values : Map[String, Value],
+  linux612~ : Bool = false,
 ) -> Int64 raise ConfigError {
+  if linux612 {
+    let value = expr.typed_value(kind, values, linux612=true)
+    let actual_kind = match value {
+      RawNumber(_, k) => k
+      _ => kind
+    }
+    return linux_range_number(value.text(), actual_kind)
+  }
   match expr.typed_value(kind, values) {
     Number(n) => n
     Unset => 0L
@@ -21,11 +30,21 @@ fn active_range(
   let modules = schema.modules_enabled(values)
   for (low, high, cond) in d.ranges {
     if cond
-      .condition(values, modules)
-      .meet(d.depends.condition(values, modules)) !=
+      .condition(values, modules, linux612=schema.linux612)
+      .meet(d.depends.condition(values, modules, linux612=schema.linux612)) !=
       N {
-      let lo = bound_number(low, schema.kind(d.name), values)
-      let hi = bound_number(high, schema.kind(d.name), values)
+      let lo = bound_number(
+        low,
+        schema.kind(d.name),
+        values,
+        linux612=schema.linux612,
+      )
+      let hi = bound_number(
+        high,
+        schema.kind(d.name),
+        values,
+        linux612=schema.linux612,
+      )
       if lo > hi {
         raise Invalid("inverted active range: " + d.name)
       }
@@ -60,12 +79,35 @@ fn clamp_default(
     Some((lo, hi)) => {
       let n = match value {
         Number(n) => n
+        RawNumber(raw, k) => linux_range_number(raw, k)
         _ => 0L
       }
       if n < lo {
-        Number(lo)
+        if schema.linux612 {
+          RawNumber(
+            if schema.kind(d.name) == Hex {
+              hex_text(lo)
+            } else {
+              lo.to_string()
+            },
+            schema.kind(d.name),
+          )
+        } else {
+          Number(lo)
+        }
       } else if n > hi {
-        Number(hi)
+        if schema.linux612 {
+          RawNumber(
+            if schema.kind(d.name) == Hex {
+              hex_text(hi)
+            } else {
+              hi.to_string()
+            },
+            schema.kind(d.name),
+          )
+        } else {
+          Number(hi)
+        }
       } else {
         value
       }

@@ -18,9 +18,11 @@ pub fn parse_expression(String) -> Expr raise ConfigError
 
 pub fn parse_kconfig(String, preprocessor? : Preprocessor) -> Schema raise ConfigError
 
+pub fn parse_linux612(String, Map[String, String], preprocessor? : Preprocessor) -> Schema raise ConfigError
+
 pub fn parse_number(String) -> Int64 raise ConfigError
 
-pub fn parse_sources(String, Map[String, String], preprocessor? : Preprocessor) -> Schema raise ConfigError
+pub fn parse_sources(String, Map[String, String], preprocessor? : Preprocessor, linux612? : Bool) -> Schema raise ConfigError
 
 pub fn parse_tri(String) -> Tri raise ConfigError
 
@@ -59,7 +61,7 @@ pub(all) enum Expr {
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Expr::equal(Self, Self) -> Bool
-pub fn Expr::evaluate(Self, Map[String, Value]) -> Value
+pub fn Expr::evaluate(Self, Map[String, Value], linux612? : Bool) -> Value
 #deprecated
 pub fn Expr::not_equal(Self, Self) -> Bool
 pub fn Expr::references(Self) -> Array[String]
@@ -134,7 +136,7 @@ pub fn Schema::inspect(Self, Resolution) -> Array[SymbolView] raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
 pub fn Schema::minimal_fragment(Self, Resolution) -> Fragment raise ConfigError
 pub fn Schema::names(Self) -> Array[String]
-pub fn Schema::new() -> Self
+pub fn Schema::new(linux612? : Bool) -> Self
 pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
 pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
 pub fn Schema::request(Self, Fragment, String, Value) -> Unit raise ConfigError
@@ -198,6 +200,7 @@ pub(all) enum Value {
   Logic(Tri)
   Text(String)
   Number(Int64)
+  RawNumber(String, Kind)
 } derive(Eq, @debug.Debug)
 #deprecated
 pub fn Value::equal(Self, Self) -> Bool

@@ -17,7 +17,20 @@ fn Expr::typed_value(
   self : Expr,
   kind : Kind,
   values : Map[String, Value],
+  linux612~ : Bool = false,
 ) -> Value raise ConfigError {
+  if linux612 {
+    let raw = match self {
+      NumericLiteral(raw, _) => raw
+      SymbolRef(name) => values.get(name).unwrap_or(Text(name)).text()
+      _ => self.evaluate(values, linux612=true).text()
+    }
+    return match kind {
+      Integer | Hex => RawNumber(raw, kind)
+      StringType => Text(raw)
+      _ => Logic(self.evaluate(values, linux612=true).logic())
+    }
+  }
   match self {
     NumericLiteral(raw, n) =>
       match kind {

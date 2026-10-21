@@ -13,7 +13,11 @@ fn reverse_strength(
       if name == target {
         strength = strength.join(
           source_value.meet(
-            condition.condition(values, schema.modules_enabled(values)),
+            condition.condition(
+              values,
+              schema.modules_enabled(values),
+              linux612=schema.linux612,
+            ),
           ),
         )
       }
@@ -42,16 +46,31 @@ fn apply_reverse(
   let mut value = base.logic()
   let mut why = reason
   if !user &&
-    d.depends.condition(values, schema.modules_enabled(values)) != N &&
+    d.depends.condition(
+      values,
+      schema.modules_enabled(values),
+      linux612=schema.linux612,
+    ) !=
+    N &&
     weak.rank() > value.rank() {
-    value = weak
+    value = if schema.linux612 {
+      weak.meet(
+        d.depends.condition(
+          values,
+          schema.modules_enabled(values),
+          linux612=true,
+        ),
+      )
+    } else {
+      weak
+    }
     why = "imply"
   }
   if strong.rank() > value.rank() {
     value = strong
     why = "select"
   }
-  if value == M && (kind == Boolean || weak == Y) {
+  if value == M && (kind == Boolean || (!schema.linux612 && weak == Y)) {
     value = Y
   }
   (Logic(value), why)

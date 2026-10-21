@@ -166,6 +166,7 @@ pub fn parse_sources(
   entry : String,
   sources : Map[String, String],
   preprocessor~ : Preprocessor = Preprocessor::new(),
+  linux612~ : Bool = false,
 ) -> Schema raise ConfigError {
   let out = []
   expand_sources(
@@ -176,5 +177,25 @@ pub fn parse_sources(
     Ref(0),
     preprocessor,
   )
-  parse_lines(out)
+  if linux612 {
+    for line in out {
+      let ts = tokenize(line.text)
+      if !ts.is_empty() &&
+        ["rsource", "osource", "orsource"].contains(ts[0].text) {
+        raise Invalid("extension outside Linux v6.12")
+      }
+    }
+  }
+  parse_lines(out, linux612~)
+}
+
+///|
+/// Linux v6.12 language profile. Files and host preprocessor callbacks remain
+/// explicit; the library does not execute commands or read ambient files.
+pub fn parse_linux612(
+  entry : String,
+  sources : Map[String, String],
+  preprocessor~ : Preprocessor = Preprocessor::new(),
+) -> Schema raise ConfigError {
+  parse_sources(entry, sources, preprocessor~, linux612=true)
 }

@@ -88,8 +88,18 @@ fn direct_visibility(
   } else {
     logical_bound(
       d.depends
-      .condition(values, schema.modules_enabled(values))
-      .meet(d.prompt_if.condition(values, schema.modules_enabled(values))),
+      .condition(
+        values,
+        schema.modules_enabled(values),
+        linux612=schema.linux612,
+      )
+      .meet(
+        d.prompt_if.condition(
+          values,
+          schema.modules_enabled(values),
+          linux612=schema.linux612,
+        ),
+      ),
       kind,
     )
   }
@@ -106,7 +116,13 @@ fn base_value(
   let visible = direct_visibility(schema, d, kind, values)
   match requests.get(d.name) {
     Some(v) =>
-      if visible != N && request_in_range(schema, d, v, values) {
+      if visible != N &&
+        (schema.linux612 || request_in_range(schema, d, v, values)) {
+        let v = if schema.linux612 {
+          clamp_default(schema, d, v, values)
+        } else {
+          v
+        }
         return (
           match v {
             Logic(t) => Logic(logical_bound(t.meet(visible), kind))
@@ -119,10 +135,20 @@ fn base_value(
   }
   for (expr, condition) in d.defaults {
     let active = condition
-      .condition(values, schema.modules_enabled(values))
-      .meet(d.depends.condition(values, schema.modules_enabled(values)))
+      .condition(
+        values,
+        schema.modules_enabled(values),
+        linux612=schema.linux612,
+      )
+      .meet(
+        d.depends.condition(
+          values,
+          schema.modules_enabled(values),
+          linux612=schema.linux612,
+        ),
+      )
     if active != N {
-      let raw = expr.typed_value(kind, values)
+      let raw = expr.typed_value(kind, values, linux612=schema.linux612)
       let value = clamp_default(schema, d, raw, values)
       return (
         match value {
@@ -133,7 +159,19 @@ fn base_value(
       )
     }
   }
-  (clamp_default(schema, d, kind.initial(), values), "initial")
+  (
+    clamp_default(
+      schema,
+      d,
+      if schema.linux612 {
+        linux_initial(kind)
+      } else {
+        kind.initial()
+      },
+      values,
+    ),
+    "initial",
+  )
 }
 
 ///|
@@ -151,7 +189,11 @@ pub fn Schema::resolve(
   }
   let mut values : Map[String, Value] = Map([])
   for d in self.defs {
-    values[d.name] = self.kind(d.name).initial()
+    values[d.name] = if self.linux612 {
+      linux_initial(self.kind(d.name))
+    } else {
+      self.kind(d.name).initial()
+    }
   }
   let reasons : Map[String, String] = Map([])
   for _ in 0..<(self.defs.length() * 4 + 32) {
@@ -174,7 +216,13 @@ pub fn Schema::resolve(
       for d in self.defs {
         let strong = reverse_strength(self, d.name, values, false)
         if strong.rank() >
-          d.depends.condition(values, self.modules_enabled(values)).rank() {
+          d.depends
+          .condition(
+            values,
+            self.modules_enabled(values),
+            linux612=self.linux612,
+          )
+          .rank() {
           messages.push("select bypasses dependencies: " + d.name)
         }
         visibility[d.name] = direct_visibility(

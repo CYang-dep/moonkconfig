@@ -32,6 +32,7 @@ fn config_line(
     Logic(N) => "# CONFIG_" + name + " is not set\n"
     Logic(t) => "CONFIG_" + name + "=" + t.text() + "\n"
     Text(s) => "CONFIG_" + name + "=" + quote_string(s) + "\n"
+    RawNumber(raw, _) => "CONFIG_" + name + "=" + raw + "\n"
     Number(n) =>
       "CONFIG_" +
       name +
@@ -93,6 +94,7 @@ pub fn Schema::export_header(
       Logic(Y) => prefix + " 1\n"
       Logic(M) => prefix + "_MODULE 1\n"
       Text(s) => prefix + " " + quote_string(s) + "\n"
+      RawNumber(raw, _) => prefix + " " + raw + "\n"
       Number(n) =>
         prefix +
         " " +

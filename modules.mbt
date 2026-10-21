@@ -28,14 +28,19 @@ fn Expr::condition(
   self : Expr,
   values : Map[String, Value],
   modules : Bool,
+  linux612~ : Bool = false,
 ) -> Tri {
   match self {
     Constant(Logic(M)) => if modules { M } else { N }
-    Negation(a) => a.condition(values, modules).negate()
+    Negation(a) => a.condition(values, modules, linux612~).negate()
     Conjunction(a, b) =>
-      a.condition(values, modules).meet(b.condition(values, modules))
+      a
+      .condition(values, modules, linux612~)
+      .meet(b.condition(values, modules, linux612~))
     Disjunction(a, b) =>
-      a.condition(values, modules).join(b.condition(values, modules))
-    _ => self.evaluate(values).logic()
+      a
+      .condition(values, modules, linux612~)
+      .join(b.condition(values, modules, linux612~))
+    _ => self.evaluate(values, linux612~).logic()
   }
 }

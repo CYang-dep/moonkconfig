@@ -132,7 +132,20 @@ pub fn Schema::parse_config(
         }
         let name = pieces[0][7:].to_owned()
         let start = pieces[0].length() + 1
-        (name, config_value(self.kind(name), line[start:].to_owned()))
+        (
+          name,
+          if self.linux612 &&
+            (self.kind(name) == Integer || self.kind(name) == Hex) {
+            let raw = line[start:].to_owned()
+            let kind = self.kind(name)
+            if !valid_linux_number(raw, kind) {
+              raise Invalid("invalid Linux numeric assignment")
+            }
+            RawNumber(raw, kind)
+          } else {
+            config_value(self.kind(name), line[start:].to_owned())
+          },
+        )
       }
       if seen.contains(name) {
         raise Invalid("duplicate assignment " + name)

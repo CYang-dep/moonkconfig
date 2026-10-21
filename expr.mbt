@@ -66,22 +66,40 @@ pub fn parse_number(text : String) -> Int64 raise ConfigError {
 }
 
 ///|
-pub fn Expr::evaluate(self : Expr, values : Map[String, Value]) -> Value {
+pub fn Expr::evaluate(
+  self : Expr,
+  values : Map[String, Value],
+  linux612~ : Bool = false,
+) -> Value {
   match self {
     Constant(v) => v
     NumericLiteral(_, n) => Number(n)
     SymbolRef(name) => values.get(name).unwrap_or(Text(name))
-    Negation(a) => Logic(a.evaluate(values).logic().negate())
+    Negation(a) => Logic(a.evaluate(values, linux612~).logic().negate())
     Conjunction(a, b) =>
-      Logic(a.evaluate(values).logic().meet(b.evaluate(values).logic()))
+      Logic(
+        a
+        .evaluate(values, linux612~)
+        .logic()
+        .meet(b.evaluate(values, linux612~).logic()),
+      )
     Disjunction(a, b) =>
-      Logic(a.evaluate(values).logic().join(b.evaluate(values).logic()))
+      Logic(
+        a
+        .evaluate(values, linux612~)
+        .logic()
+        .join(b.evaluate(values, linux612~).logic()),
+      )
     Comparison(op, a, b) => {
-      let x = a.evaluate(values)
-      let y = b.evaluate(values)
-      let order = match (x, y) {
-        (Number(n), Number(m)) => n.compare(m)
-        _ => x.text().compare(y.text())
+      let x = a.evaluate(values, linux612~)
+      let y = b.evaluate(values, linux612~)
+      let order = if linux612 {
+        linux_compare(a, b, values)
+      } else {
+        match (x, y) {
+          (Number(n), Number(m)) => n.compare(m)
+          _ => x.text().compare(y.text())
+        }
       }
       let yes = match op {
         "=" => order == 0

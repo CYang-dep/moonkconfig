@@ -3,7 +3,7 @@
 // Properties carry their declaration's dependency; the symbol dependency and
 // prompt visibility are the disjunction of all declaration-local alternatives.
 fn merge_declarations(parsed : Schema) -> Schema raise ConfigError {
-  let out = Schema::new()
+  let out = Schema::new(linux612=parsed.linux612)
   for node in parsed.defs {
     if parsed.defs.filter(fn(d) { d.name == node.name }).length() == 1 {
       for i, edge in node.selects {

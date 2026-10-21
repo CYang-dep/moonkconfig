@@ -141,8 +141,11 @@ fn close_scope(
 }
 
 ///|
-fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
-  let schema = Schema::new()
+fn parse_lines(
+  lines : Array[SourceLine],
+  linux612~ : Bool = false,
+) -> Schema raise ConfigError {
+  let schema = Schema::new(linux612~)
   let scopes : Array[Scope] = []
   let mut active_choice : Int32? = None
   let mut current : Int32? = None
@@ -186,6 +189,9 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           current = Some(schema.defs.length() - 1)
         }
         "choice" => {
+          if linux612 && ts.length() != 1 {
+            raise Invalid("Linux v6.12 requires anonymous boolean choices")
+          }
           if active_choice != None {
             raise Invalid("nested choices unsupported")
           }
@@ -330,11 +336,19 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
             continue
           }
           match current {
-            Some(i) => property(schema.defs[i], ts)
+            Some(i) => {
+              if linux612 && ts[0].text == "option" {
+                raise Invalid("option is not a Linux v6.12 directive")
+              }
+              property(schema.defs[i], ts)
+            }
             None => {
               if active_choice is Some(i) &&
                 !scopes.is_empty() &&
                 scopes[scopes.length() - 1].tag == "endchoice" {
+                if linux612 && ts[0].text == "optional" {
+                  raise Invalid("optional is not a Linux v6.12 directive")
+                }
                 choice_property(schema.choices[i], ts)
                 continue
               }

@@ -38,11 +38,12 @@ pub struct Schema {
   priv defs : Array[Definition]
   priv choices : Array[Choice]
   priv nodes : Array[Definition]
+  priv linux612 : Bool
 }
 
 ///|
-pub fn Schema::new() -> Schema {
-  { defs: [], choices: [], nodes: [], }
+pub fn Schema::new(linux612~ : Bool = false) -> Schema {
+  { defs: [], choices: [], nodes: [], linux612, }
 }
 
 ///|
@@ -140,7 +141,7 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       if self.kind(name) != Boolean {
         raise Invalid("only boolean choice members supported")
       }
-      if !d.defaults.is_empty() {
+      if !self.linux612 && !d.defaults.is_empty() {
         raise Invalid(
           "defaults on choice members unsupported; use choice default",
         )
@@ -180,7 +181,8 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       raise Invalid("select/imply source must be logical: " + d.name)
     }
     for edge in d.selects + d.implies {
-      if self.choices.any(fn(c) { c.members.contains(edge.0) }) {
+      if !self.linux612 &&
+        self.choices.any(fn(c) { c.members.contains(edge.0) }) {
         raise Invalid("select/imply to choice member unsupported")
       }
       let target_kind = self.kind(edge.0)
