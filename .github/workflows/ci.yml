@@ -37,6 +37,7 @@ jobs:
           moon run examples/variants --target ${{ matrix.target }}
           moon run examples/ui --target ${{ matrix.target }}
           moon run examples/quickstart --target ${{ matrix.target }}
+          moon run examples/declarations --target ${{ matrix.target }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -44,5 +45,6 @@ jobs:
         run: |
           python -m pip install kconfiglib==14.1.0
           python tools/differential.py --target ${{ matrix.target }}
+          python tools/check_declarations.py --target ${{ matrix.target }}
       - name: Conservative source and meaningful history audit
         run: python tools/audit.py
