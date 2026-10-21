@@ -9,3 +9,7 @@ MoonKconfig is an original MoonBit implementation, not a source-code port.
 - Source, tests and documentation were developed with AI assistance. Human-facing authorship is the account-bound project identity, not a claim of manual-only implementation.
 
 The Apache-2.0 license applies to this repository's original code and documents. Merely referring to Linux documentation does not relicense Linux source or claim its code was ported. External tools retain their respective licenses.
+
+## 0.2.0 符合性目标补充
+
+完整语言符合性终点固定为 Linux v6.12。另参考该标签下 Documentation/kbuild/kconfig-language.rst 和 kconfig-macro-language.rst，说明多次声明、变量展开及预处理函数规则。文档参考不等于已完成全部符合性；本阶段证据及差异见 docs/conformance.md。新增合成配置与实现为原创，没有复制上游实现或测试夹具。

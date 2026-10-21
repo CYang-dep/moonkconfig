@@ -113,11 +113,11 @@ python tools/differential.py --target js
 python tools/audit.py
 ```
 
-把目标替换为 wasm/js/native 可验证其余后端。CI 对四个目标执行严格检查、测试、构建、三个工作流和独立差分。
+把目标替换为 wasm/js/native 可验证其余后端。CI 对四个目标执行严格检查、测试、构建、五个示例、独立差分及配置导出独立回读。
 
 仓库包含 46 个常驻测试；差分脚本另生成临时测试，与固定 **Kconfiglib 14.1.0** 比较原创合成配置的值、可见性及自身导出回读。当前矩阵为 **113 场景 / 1,361 断言**；增补场景的最新计数由脚本输出，不将有限样本一致视为完整兼容证明。临时生成文件在 `finally` 中删除，不计入实现行数。
 
-## 已知限制与非目标
+## 当前限制与宿主边界
 
 - 当前未完成 tristate choice、choice 的完整关系与成员 default/select/imply、字符类 source glob、绝对路径宿主映射。它们属于完整符合性目标的待办，见符合性文档。
 - 当前未完成环境变量 option、defconfig_list 及完整菜单元数据；transitional 不在目标 v6.12 语言中。Linux 构建系统、自动文件读写、CLI 菜单或网页 UI 不随库提供。menu/comment 标题仅做结构语法检查，不构建菜单树。
