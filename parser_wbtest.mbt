@@ -10,10 +10,10 @@ test "parse typed options defaults ranges and reverse dependencies" {
 }
 
 ///|
-test "reject missing types duplicate symbols and unsupported grammar" {
+test "reject missing types conflicting declarations and unsupported grammar" {
   for
     text in [
-      "config A\n", "config A\n bool\nconfig A\n bool", "config A\n bool\n option env=BAD",
+      "config A\n", "config A\n bool\nconfig A\n string", "config A\n bool\n option env=BAD",
       "config A\n string\n select B",
     ] {
     let failed = try {

@@ -165,9 +165,6 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
             ts[1].text == "y" {
             raise Invalid("invalid config declaration")
           }
-          if schema.defs.any(fn(d) { d.name == ts[1].text }) {
-            raise Invalid("repeated definitions unsupported")
-          }
           if schema.defs.length() >= 4096 {
             raise Invalid("too many symbols")
           }
@@ -349,6 +346,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
   if !scopes.is_empty() {
     raise Invalid("unterminated Kconfig scope")
   }
-  schema.validate()
-  schema
+  let merged = merge_declarations(schema)
+  merged.validate()
+  merged
 }
