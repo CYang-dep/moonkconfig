@@ -120,6 +120,7 @@ pub struct Schema {
 }
 pub fn Schema::add(Self, String, Kind, prompt? : String) -> Unit raise ConfigError
 pub fn Schema::changes(Self, Resolution, Resolution) -> Array[ConfigChange] raise ConfigError
+pub fn Schema::choice_help(Self, String) -> String raise ConfigError
 pub fn Schema::choice_members(Self, String) -> Array[String] raise ConfigError
 pub fn Schema::choice_names(Self) -> Array[String]
 pub fn Schema::default_value(Self, String, Expr, condition? : Expr) -> Unit raise ConfigError

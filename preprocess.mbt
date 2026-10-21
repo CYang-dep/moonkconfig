@@ -267,6 +267,7 @@ fn Preprocessor::line(
       name
       .to_array()
       .all(fn(c) {
+        c == '$' ||
         c == '-' ||
         c == '_' ||
         (c >= 'a' && c <= 'z') ||

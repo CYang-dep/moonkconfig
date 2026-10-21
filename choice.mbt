@@ -4,6 +4,7 @@ priv struct Choice {
   mut prompt : String?
   mut prompt_if : Expr
   mut depends : Expr
+  mut help : String
   mut optional : Bool
   defaults : Array[(String, Expr)]
   members : Array[String]
@@ -124,6 +125,20 @@ pub fn Schema::choice_members(
   for c in self.choices {
     if c.name == name {
       return c.members.copy()
+    }
+  }
+  raise Invalid("unknown choice " + name)
+}
+
+///|
+/// Help attached to a choice, addressed by its name or generated choice_N name.
+pub fn Schema::choice_help(
+  self : Schema,
+  name : String,
+) -> String raise ConfigError {
+  for c in self.choices {
+    if c.name == name {
+      return c.help
     }
   }
   raise Invalid("unknown choice " + name)

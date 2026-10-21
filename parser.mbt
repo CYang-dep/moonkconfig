@@ -146,6 +146,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
   let scopes : Array[Scope] = []
   let mut active_choice : Int32? = None
   let mut current : Int32? = None
+  let mut comment_header = false
   let mut pos = 0
   while pos < lines.length() {
     let line = lines[pos]
@@ -157,6 +158,12 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
     try {
       if ts[0].quoted {
         raise Invalid("quoted directive is invalid")
+      }
+      if [
+          "config", "menuconfig", "choice", "endchoice", "if", "endif", "menu", "endmenu",
+          "mainmenu", "comment",
+        ].contains(ts[0].text) {
+        comment_header = false
       }
       match ts[0].text {
         "config" | "menuconfig" => {
@@ -200,6 +207,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
             prompt_if: truth(),
             depends: truth(),
             optional: false,
+            help: "",
             defaults: [],
             members: [],
           })
@@ -267,6 +275,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           current = None
         }
         "mainmenu" | "comment" => {
+          comment_header = ts[0].text == "comment"
           if ts.length() != 2 || !ts[1].quoted {
             raise Invalid("expected quoted title")
           }
@@ -276,9 +285,8 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
           if ts.length() != 1 {
             raise Invalid("unexpected help arguments")
           }
-          let index = match current {
-            Some(i) => i
-            None => raise Invalid("help outside symbol")
+          if current == None && active_choice == None {
+            raise Invalid("help outside symbol/choice")
           }
           let base = indentation(line.text)
           let parts : Array[String] = []
@@ -303,9 +311,24 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
             }
             pos += 1
           }
-          schema.defs[index].help = parts.join("\n").trim().to_owned()
+          let help = parts.join("\n").trim().to_owned()
+          match current {
+            Some(i) => schema.defs[i].help = help
+            None =>
+              match active_choice {
+                Some(i) => schema.choices[i].help = help
+                None => ()
+              }
+          }
         }
-        _ =>
+        _ => {
+          if comment_header {
+            if ts[0].text != "depends" || ts.length() < 3 || ts[1].text != "on" {
+              raise Invalid("unsupported comment property")
+            }
+            ignore(parse_expression_tokens(suffix(ts, 2)))
+            continue
+          }
           match current {
             Some(i) => property(schema.defs[i], ts)
             None => {
@@ -341,6 +364,7 @@ fn parse_lines(lines : Array[SourceLine]) -> Schema raise ConfigError {
               }
             }
           }
+        }
       }
     } catch {
       Invalid(msg) => raise Invalid(line.location + ": " + msg)
