@@ -113,6 +113,9 @@ fn base_value(
   requests : Map[String, Value],
   values : Map[String, Value],
 ) -> (Value, String) raise ConfigError {
+  if schema.linux612 && d.kind == None {
+    return (Text(d.name), "undefined-type")
+  }
   let visible = direct_visibility(schema, d, kind, values)
   match requests.get(d.name) {
     Some(v) =>
@@ -189,7 +192,9 @@ pub fn Schema::resolve(
   }
   let mut values : Map[String, Value] = Map([])
   for d in self.defs {
-    values[d.name] = if self.linux612 {
+    values[d.name] = if self.linux612 && d.kind == None {
+      Text(d.name)
+    } else if self.linux612 {
       linux_initial(self.kind(d.name))
     } else {
       self.kind(d.name).initial()

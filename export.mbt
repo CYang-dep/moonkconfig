@@ -56,6 +56,9 @@ fn Schema::check_snapshot(
     if value == Unset && (kind == Integer || kind == Hex) {
       continue
     }
+    if self.linux612 && value is RawNumber(_, k) && k == kind {
+      continue
+    }
     if !kind.accepts(value) {
       raise Invalid("snapshot/schema type differs: " + d.name)
     }

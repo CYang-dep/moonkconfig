@@ -47,3 +47,37 @@ test "Linux v6.12 imply respects the target dependency" {
   )
   assert_eq(schema.resolve(Fragment::new()).value("B"), Logic(M))
 }
+
+///|
+test "native config import and omission follow olddefconfig" {
+  let schema = parse_linux612(
+    "Kconfig",
+    Map([
+      (
+        "Kconfig", "config A\n int \"A\"\n default 1\nconfig HIDDEN\n bool\nconfig OTHER\n bool\n default y\n select UNDECLARED\n",
+      ),
+    ]),
+  )
+  let (fragment, diagnostics) = schema.read_linux_config(
+    "CONFIG_UNKNOWN=y\nCONFIG_A=3\nCONFIG_A=4\nCONFIG_A=invalid\n",
+  )
+  assert_eq(diagnostics.length(), 3)
+  let result = schema.resolve(fragment)
+  assert_eq(result.value("A").text(), "4")
+  assert_eq(schema.export_linux_config(result), "CONFIG_A=4\nCONFIG_OTHER=y\n")
+}
+
+///|
+test "native comparisons use lexical strings and unsigned hex" {
+  let schema = parse_linux612(
+    "Kconfig",
+    Map([
+      (
+        "Kconfig", "config A\n string\n default \"abc\"\nconfig B\n bool \"B\"\n default y if A < \"b\"\nconfig H\n hex\n default 0xffffffffffffffff\nconfig C\n bool \"C\"\n default y if H = -1\n",
+      ),
+    ]),
+  )
+  let result = schema.resolve(Fragment::new())
+  assert_eq(result.value("B"), Logic(Y))
+  assert_eq(result.value("C"), Logic(Y))
+}

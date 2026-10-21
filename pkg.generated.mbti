@@ -131,6 +131,7 @@ pub fn Schema::dependency_order(Self) -> Array[String] raise ConfigError
 pub fn Schema::export_config(Self, Resolution) -> String raise ConfigError
 pub fn Schema::export_fragment(Self, Fragment) -> String raise ConfigError
 pub fn Schema::export_header(Self, Resolution) -> String raise ConfigError
+pub fn Schema::export_linux_config(Self, Resolution) -> String raise ConfigError
 pub fn Schema::help(Self, String) -> String raise ConfigError
 pub fn Schema::inspect(Self, Resolution) -> Array[SymbolView] raise ConfigError
 pub fn Schema::kind(Self, String) -> Kind raise ConfigError
@@ -139,6 +140,7 @@ pub fn Schema::names(Self) -> Array[String]
 pub fn Schema::new(linux612? : Bool) -> Self
 pub fn Schema::parse_config(Self, String) -> Fragment raise ConfigError
 pub fn Schema::prompt(Self, String) -> (String?, Expr) raise ConfigError
+pub fn Schema::read_linux_config(Self, String) -> (Fragment, Array[String]) raise ConfigError
 pub fn Schema::request(Self, Fragment, String, Value) -> Unit raise ConfigError
 pub fn Schema::request_options(Self, Fragment, String) -> Array[Value] raise ConfigError
 pub fn Schema::resolve(Self, Fragment) -> Resolution raise ConfigError

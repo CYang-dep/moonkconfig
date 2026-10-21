@@ -66,7 +66,12 @@ pub fn Schema::kind(self : Schema, name : String) -> Kind raise ConfigError {
   let d = self.defs[self.index(name)]
   match d.kind {
     Some(k) => k
-    None => raise Invalid("missing type: " + name)
+    None =>
+      if self.linux612 {
+        StringType
+      } else {
+        raise Invalid("missing type: " + name)
+      }
   }
 }
 
@@ -133,15 +138,21 @@ pub fn Schema::reverse_dependency(
 ///|
 pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
   for c in self.choices {
+    if self.linux612 && c.prompt == None {
+      raise Invalid("choice must have a prompt")
+    }
     if c.members.is_empty() {
       raise Invalid("empty choice " + c.name)
     }
     for name in c.members {
       let d = self.defs[self.index(name)]
+      if self.linux612 && d.prompt == None {
+        raise Invalid("choice member must have a prompt")
+      }
       if self.kind(name) != Boolean {
         raise Invalid("only boolean choice members supported")
       }
-      if !self.linux612 && !d.defaults.is_empty() {
+      if !d.defaults.is_empty() {
         raise Invalid(
           "defaults on choice members unsupported; use choice default",
         )
@@ -184,6 +195,9 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       if !self.linux612 &&
         self.choices.any(fn(c) { c.members.contains(edge.0) }) {
         raise Invalid("select/imply to choice member unsupported")
+      }
+      if self.linux612 && !self.defs.any(fn(target) { target.name == edge.0 }) {
+        continue
       }
       let target_kind = self.kind(edge.0)
       if target_kind != Boolean && target_kind != Tristate {

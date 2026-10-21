@@ -8,7 +8,7 @@ fn dependency_graph(
   }
   let count = Ref(0)
   fn edge(from : String, to : String) -> Unit raise ConfigError {
-    if !graph.contains(to) {
+    if !graph.contains(to) || !graph.contains(from) {
       return
     }
     let adjacent = graph[from]

@@ -84,6 +84,7 @@ fn expand_sources(
   output : Array[SourceLine],
   budget : Ref[Int32],
   preprocessor : Preprocessor,
+  linux612 : Bool,
 ) -> Unit raise ConfigError {
   if active.length() >= 32 || active.contains(file) {
     raise Invalid("cyclic or overdeep source: " + file)
@@ -125,6 +126,9 @@ fn expand_sources(
         ts[0].text == "osource" ||
         ts[0].text == "orsource"
       ) {
+      if linux612 && ts[0].text != "source" {
+        raise Invalid("source extension outside Linux v6.12")
+      }
       if ts.length() != 2 || !ts[1].quoted {
         raise Invalid(line.location + ": source needs quoted path")
       }
@@ -138,7 +142,11 @@ fn expand_sources(
       path = safe_source_path(path)
       let matches = []
       for candidate, _ in sources {
-        if source_pattern(path, candidate) {
+        if (if linux612 {
+            path == candidate
+          } else {
+            source_pattern(path, candidate)
+          }) {
           matches.push(candidate)
         }
       }
@@ -148,7 +156,9 @@ fn expand_sources(
         raise Invalid("missing source: " + path)
       }
       for found in matches {
-        expand_sources(found, sources, active, output, budget, preprocessor)
+        expand_sources(
+          found, sources, active, output, budget, preprocessor, linux612,
+        )
       }
     } else {
       output.push(line)
@@ -176,6 +186,7 @@ pub fn parse_sources(
     out,
     Ref(0),
     preprocessor,
+    linux612,
   )
   if linux612 {
     for line in out {

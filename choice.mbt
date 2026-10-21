@@ -65,8 +65,8 @@ fn apply_choices(
       N
     } else {
       c.depends
-      .condition(previous, modules)
-      .meet(c.prompt_if.condition(previous, modules))
+      .condition(previous, modules, linux612=schema.linux612)
+      .meet(c.prompt_if.condition(previous, modules, linux612=schema.linux612))
     }
     let visible_members = c.members.filter(fn(name) raise ConfigError {
       let d = schema.defs[schema.index(name)]
@@ -90,7 +90,7 @@ fn apply_choices(
       }
       if selected == None {
         for (name, cond) in c.defaults {
-          if cond.condition(previous, modules) != N &&
+          if cond.condition(previous, modules, linux612=schema.linux612) != N &&
             visible_members.contains(name) {
             selected = Some(name)
             break

@@ -40,6 +40,14 @@ fn linux_initial(kind : Kind) -> Value {
 // The result carries unsigned bits; signed conversion is deferred until both
 // operands are known. Unknown constants use C base-0 (including octal).
 fn linux_digits(raw : String, kind : Kind?) -> (UInt64, Bool)? {
+  if kind == Some(Boolean) || kind == Some(Tristate) {
+    return match raw {
+      "n" => Some((0UL, false))
+      "m" => Some((1UL, false))
+      "y" => Some((2UL, false))
+      _ => None
+    }
+  }
   if raw.is_empty() {
     return None
   }
@@ -106,12 +114,12 @@ fn linux_operand(
       match values.get(name) {
         Some(RawNumber(raw, kind)) => (raw, Some(kind), false)
         Some(Text(raw)) => (raw, Some(StringType), false)
-        Some(Logic(t)) => (t.rank().to_string(), Some(Integer), false)
+        Some(Logic(t)) => (t.text(), Some(Tristate), false)
         Some(v) => (v.text(), Some(Integer), false)
         None => (name, None, false)
       }
     Constant(Text(raw)) => (raw, None, false)
-    Constant(Logic(t)) => (t.rank().to_string(), Some(Integer), false)
+    Constant(Logic(t)) => (t.text(), Some(Tristate), false)
     _ => (expr.evaluate(values, linux612=true).text(), None, false)
   }
 }
@@ -121,7 +129,7 @@ fn linux_compare(a : Expr, b : Expr, values : Map[String, Value]) -> Int32 {
   let (x, xkind, _) = linux_operand(a, values)
   let (y, ykind, _) = linux_operand(b, values)
   if xkind == Some(StringType) && ykind == Some(StringType) {
-    return x.compare(y)
+    return x.lexical_compare(y)
   }
   match (linux_digits(x, xkind), linux_digits(y, ykind)) {
     (Some((n, u)), Some((m, v))) =>
@@ -130,7 +138,7 @@ fn linux_compare(a : Expr, b : Expr, values : Map[String, Value]) -> Int32 {
       } else {
         n.reinterpret_as_int64().compare(m.reinterpret_as_int64())
       }
-    _ => x.compare(y)
+    _ => x.lexical_compare(y)
   }
 }
 
