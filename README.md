@@ -1,6 +1,6 @@
 # MoonKconfig
 
-MoonBit 编写的、可嵌入的构建配置引擎。版本 **0.1.0**，模块 `CYang-dep/moonkconfig`，Apache-2.0。
+MoonBit 编写的、可嵌入的构建配置引擎。版本 **0.2.0**，模块 `CYang-dep/moonkconfig`，Apache-2.0。
 
 固件、产品变体和配置界面经常需要共同处理“用户请求并不等于最终配置”：隐藏选项不能被强制开启，依赖可能降低可见性，`select` 可以绕过依赖，而 choice 必须互斥。本项目将这些规则放进不依赖文件系统、Shell 或 Python 的 MoonBit 库，供宿主程序复用。
 
@@ -15,15 +15,16 @@ MoonBit 编写的、可嵌入的构建配置引擎。版本 **0.1.0**，模块 `
 | 领域 | 本版本范围 |
 | --- | --- |
 | 值与表达式 | `n < m < y`、非/与/或、比较、括号、带溢出检测的 64 位有符号数 |
-| 声明与作用域 | bool/tristate/string/int/hex、prompt/help、menu/if 的继承依赖和可见性 |
-| 源树 | 内存映射上的 source/rsource/osource/orsource，续行、来源追踪、循环与预算检测 |
+| 声明与作用域 | bool/tristate/string/int/hex、prompt/help、menu/if 的继承依赖和可见性、跨文件同名声明合并 |
+| 源树 | 内存映射上的 source/rsource/osource/orsource，续行、排序通配、树内父路径、全部声明来源、循环与预算检测 |
+| 预处理 | = / := / +=、参数函数与嵌套展开、宿主环境快照与 shell 回调、诊断及文件/行号内建函数 |
 | 求值 | 首个有效 default、依赖与用户请求、强 select、弱 imply、模块开关 |
 | 互斥选择 | 命名/匿名的布尔 choice，条件默认、optional 和最后显式请求顺序 |
 | 数值约束 | 首个活动 range，用户越界时回退默认，默认越界时钳制；十六进制上下文 |
 | 工程工作流 | 严格 .config 读取、覆盖冲突、配置差异、精简片段、C 头文件、独立 UI 快照 |
 | 错误处理 | `ConfigError`，语法来源定位、未知赋值、类型冲突、循环路径与资源上限 |
 
-**不是完整 Linux/Zephyr Kconfig 替代品。** 它是以 Kconfig 规则为依据、经过有限差分验证的可移植核心；不对任意上游配置树承诺兼容。
+项目终点固定为 **Linux v6.12 Kconfig 完整语言符合性**，包括跨文件同名声明合并和预处理。**0.2.0 是阶段版本，尚未完成全部符合性**；已实现语义、独立证据和未关闭项见 [符合性目标与跨文件最终配置](docs/conformance.md)。这些剩余差异属于实现任务，不以永久非目标排除。
 
 ## 安装与环境
 
@@ -32,7 +33,7 @@ MoonBit 编写的、可嵌入的构建配置引擎。版本 **0.1.0**，模块 `
 在宿主模块中固定版本：
 
 ```sh
-moon add CYang-dep/moonkconfig@0.1.0
+moon add CYang-dep/moonkconfig@0.2.0
 ```
 
 可移植目标：`wasm-gc`、`wasm`、`js`、`native`。Native 执行需要平台 C 编译器；Windows 本地没有 C 编译器时，使用 Ubuntu CI 验证，不将“编译可用”等同于“本地运行通过”。
@@ -114,14 +115,14 @@ python tools/audit.py
 
 把目标替换为 wasm/js/native 可验证其余后端。CI 对四个目标执行严格检查、测试、构建、三个工作流和独立差分。
 
-仓库包含 38 个常驻测试；差分脚本另生成临时测试，与固定 **Kconfiglib 14.1.0** 比较原创合成配置的值、可见性及自身导出回读。当前矩阵为 **98 场景 / 1,286 断言**；增补场景的最新计数由脚本输出，不将有限样本一致视为完整兼容证明。临时生成文件在 `finally` 中删除，不计入实现行数。
+仓库包含 46 个常驻测试；差分脚本另生成临时测试，与固定 **Kconfiglib 14.1.0** 比较原创合成配置的值、可见性及自身导出回读。当前矩阵为 **113 场景 / 1,361 断言**；增补场景的最新计数由脚本输出，不将有限样本一致视为完整兼容证明。临时生成文件在 `finally` 中删除，不计入实现行数。
 
 ## 已知限制与非目标
 
-- 不支持宏/函数/Shell/环境预处理、通配符 source、绝对/父级路径、同名符号多次定义、tristate choice、choice 嵌套、choice 成员自身 default、对 choice 成员的 select/imply；这些情况尽可能明确报错。
-- 没有环境变量 option、transitional、defconfig_list、Linux 构建系统、自动文件读写、CLI 菜单或网页 UI。menu/comment 标题仅做结构语法检查，不构建菜单树。
+- 当前未完成 tristate choice、choice 的完整关系与成员 default/select/imply、字符类 source glob、绝对路径宿主映射。它们属于完整符合性目标的待办，见符合性文档。
+- 当前未完成环境变量 option、defconfig_list 及完整菜单元数据；transitional 不在目标 v6.12 语言中。Linux 构建系统、自动文件读写、CLI 菜单或网页 UI 不随库提供。menu/comment 标题仅做结构语法检查，不构建菜单树。
 - 标量值按类型归一化；以数值符号和字符串混用、依赖原始数字拼写的比较不保证与 Kconfiglib 一致。不要依赖数字的原始文本表示。复杂关系表达式是本库扩展，不宣称属于原生 Kconfig 语法。
-- `.config` 不保留注释、空行与字面格式；未知/重复赋值严格拒绝。字符串不允许控制字符与宏形式，不能用于承载多行文本。
+- `.config` 不保留注释、空行与字面格式；未知/重复赋值严格拒绝。字符串不允许控制字符，源码宏经过预处理，.config 中的 $ 文本按字面保存，不能用于承载多行文本。
 - 单文件最多 4 Mi UTF-16 单元、逻辑行 65,536 单元、表达式最多 256 tokens / 128 层 / 4096 节点、source 深度 32、scope 深度 64、展开预算 16 Mi UTF-16 单元 / 65,536 行、依赖边 65,536。限制是防御性预算，不代表已做安全认证。
 - 不支持超过 Int64 上界的无符号 hex；错误诊断以逻辑行为单位，不提供完整编辑器恢复语法树。
 
@@ -131,6 +132,10 @@ python tools/audit.py
 
 项目使用 AI 辅助进行选题调研、实现、测试与文档编写；发布依据是实际运行的检查、差分和 CI，不把 AI 推断写成兼容性保证。有限生态检查及被否决方向见 [公开查重记录](docs/competition/duplicate-check.md)。
 
+## 跨文件语义验证
+
+运行 `moon run examples/declarations --target js`，可以看到第二个文件的同名声明单独活动时输出 `CONFIG_SHARED=22`；两个声明都活动时取首个默认值 11，显式请求 37 则得到 37。[完整输入、最终配置及符合性进度](docs/conformance.md)给出可复现步骤。
+
 ## 公开验证记录
 
-[四后端 CI](https://github.com/CYang-dep/moonkconfig/actions/runs/39398377786) 在官方 `moon 0.1.20261016` / `moonc v0.10.16+b1a0e846e` 下完成 wasm-gc、wasm、js、native 的严格检查、38 项常驻测试、构建、四个示例，以及每后端 98 个原创场景 / 1286 项差分断言。构建记录只证明所列版本和测试范围，不代表完整 Kconfig 语言兼容。
+0.1.0 的 [历史四后端 CI](https://github.com/CYang-dep/moonkconfig/actions/runs/39398752351) 只证明旧版。0.2.0 的证据以对应提交 Actions 和 Release 为准，不能用旧 CI 代替。CI 对四个后端执行 46 个常驻测试、113 场景 / 1361 断言、五个示例及独立 .config 消费验证。有限通过不等于完整语言符合性。
