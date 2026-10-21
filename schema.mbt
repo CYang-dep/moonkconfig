@@ -37,11 +37,12 @@ fn definition(name : String, kind : Kind?, location : String) -> Definition {
 pub struct Schema {
   priv defs : Array[Definition]
   priv choices : Array[Choice]
+  priv nodes : Array[Definition]
 }
 
 ///|
 pub fn Schema::new() -> Schema {
-  { defs: [], choices: [], }
+  { defs: [], choices: [], nodes: [], }
 }
 
 ///|

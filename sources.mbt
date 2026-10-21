@@ -52,13 +52,12 @@ fn safe_source_path(path : String) -> String raise ConfigError {
   }
   let parts : Array[String] = []
   for part in path.split("/") {
-    if part == ".." ||
-      part.contains("*") ||
-      part.contains("?") ||
-      part.contains("$") {
-      raise Invalid("unsupported source path")
-    }
-    if part != "." && !part.is_empty() {
+    if part == ".." {
+      if parts.is_empty() {
+        raise Invalid("source path escapes source tree")
+      }
+      ignore(parts.pop())
+    } else if part != "." && !part.is_empty() {
       parts.push(part.to_owned())
     }
   }
@@ -137,10 +136,19 @@ fn expand_sources(
         }
       }
       path = safe_source_path(path)
-      if sources.contains(path) {
-        expand_sources(path, sources, active, output, budget, preprocessor)
-      } else if ts[0].text == "source" || ts[0].text == "rsource" {
+      let matches = []
+      for candidate, _ in sources {
+        if source_pattern(path, candidate) {
+          matches.push(candidate)
+        }
+      }
+      matches.sort()
+      if matches.is_empty() &&
+        (ts[0].text == "source" || ts[0].text == "rsource") {
         raise Invalid("missing source: " + path)
+      }
+      for found in matches {
+        expand_sources(found, sources, active, output, budget, preprocessor)
       }
     } else {
       output.push(line)

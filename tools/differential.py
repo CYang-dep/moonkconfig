@@ -28,12 +28,18 @@ def main():
     with tempfile.TemporaryDirectory(prefix='moonkconfig-oracle-') as directory:
         folder=pathlib.Path(directory)
         for label,text,fragment in cases():
-            source=folder/'Kconfig';source.write_text(text,encoding='utf-8')
+            casefolder=folder/str(count);casefolder.mkdir()
+            files = text if isinstance(text,dict) else {'Kconfig':text}
+            for name,content in files.items():
+                file=casefolder/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_text(content,encoding='utf-8')
+            source=casefolder/'Kconfig'
+            os.environ['srctree']=str(casefolder)
             config=folder/'.config';config.write_text(fragment,encoding='utf-8')
             reference=kconfiglib.Kconfig(str(source),warn_to_stderr=False)
             reference.load_config(str(config))
+            parse = 'parse_sources("Kconfig", Map([' + ','.join('('+quoted(n)+','+quoted(c)+')' for n,c in files.items()) + ']))'
             lines=['///|','test '+quoted('oracle: '+str(count)+' '+label)+' {',
-                '  let schema = parse_kconfig('+quoted(text)+')',
+                '  let schema = '+parse,
                 '  let result = schema.resolve(schema.parse_config('+quoted(fragment)+'))']
             for sym in reference.unique_defined_syms:
                 lines.append('  assert_eq(result.value('+quoted(sym.name)+'),'+expected(sym)+')')

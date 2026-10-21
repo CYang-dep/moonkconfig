@@ -51,8 +51,27 @@ fn merge_declarations(parsed : Schema) -> Schema raise ConfigError {
       d.help = node.help
     }
   }
+  for node in parsed.defs {
+    out.nodes.push(node)
+  }
   for choice in parsed.choices {
     out.choices.push(choice)
   }
   out
+}
+
+///|
+/// All declaration locations, in source traversal order. Builder symbols have
+/// the single location "builder"; callers receive a fresh array.
+pub fn Schema::source_locations(
+  self : Schema,
+  name : String,
+) -> Array[String] raise ConfigError {
+  ignore(self.index(name))
+  let nodes = self.nodes.filter(fn(d) { d.name == name })
+  if nodes.is_empty() {
+    [self.defs[self.index(name)].location]
+  } else {
+    nodes.map(fn(d) { d.location })
+  }
 }

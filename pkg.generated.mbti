@@ -141,6 +141,7 @@ pub fn Schema::request_options(Self, Fragment, String) -> Array[Value] raise Con
 pub fn Schema::resolve(Self, Fragment) -> Resolution raise ConfigError
 pub fn Schema::reverse_dependency(Self, String, String, weak? : Bool, condition? : Expr) -> Unit raise ConfigError
 pub fn Schema::source_location(Self, String) -> String raise ConfigError
+pub fn Schema::source_locations(Self, String) -> Array[String] raise ConfigError
 pub fn Schema::validate(Self) -> Unit raise ConfigError
 
 pub(all) struct SymbolView {

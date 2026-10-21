@@ -99,3 +99,19 @@ config UNKNOWN
     yield 'declarations-type-on-later-node', "config X\n default 12\nconfig X\n int \"X\"\n", ''
     yield 'macros-flavor', 'BASE = old\nDEFER = $(BASE)\nNOW := $(BASE)\nBASE = new\nBASE += tail\nNOW += $(BASE)\nconfig X\n string\n default "$(DEFER):$(NOW)"\n', ''
     yield 'macros-functions', 'COMMA := ,\nJOIN = $(1)$(COMMA)$(2)\nconfig X\n string\n default "$(JOIN,left,right):$(UNKNOWN)"\n', ''
+
+    for left,right in [(0,0),(1,0),(0,1),(1,1)]:
+        yield 'multifile-shared-%s-%s'%(left,right), {
+          'Kconfig': 'config LEFT\n bool "Left"\nconfig RIGHT\n bool "Right"\nsource "a/Kconfig"\nsource "b/Kconfig"\n',
+          'a/Kconfig': 'if LEFT\nconfig SHARED\n int "First"\n default 11\nendif\n',
+          'b/Kconfig': 'if RIGHT\nconfig SHARED\n int "Second"\n default 22\nendif\n',
+        }, 'CONFIG_LEFT=%s\nCONFIG_RIGHT=%s\n'%('y' if left else 'n','y' if right else 'n')
+    yield 'multifile-macro-order', {
+      'Kconfig':'BASE = old\nDEFER = $(BASE)\nNOW := $(BASE)\nF = $(1)-$(2)\nsource "sub/Kconfig"\nconfig RESULT\n string\n default "$(DEFER):$(NOW):$(F,x,y)"\n',
+      'sub/Kconfig':'BASE = new\nBASE += tail\nNOW += $(BASE)\n',
+    }, ''
+    yield 'source-glob-order', {
+      'Kconfig':'source "parts/Kconfig.*"\n',
+      'parts/Kconfig.b':'config X\n int\n default 22\n',
+      'parts/Kconfig.a':'config X\n int\n default 11\n',
+    }, ''
