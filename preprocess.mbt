@@ -263,7 +263,16 @@ fn Preprocessor::line(
       before
     }
     let name = self.expand_at(lhs, file, number, [], [], 0)
-    if identifier(name) {
+    if !name.is_empty() &&
+      name
+      .to_array()
+      .all(fn(c) {
+        c == '-' ||
+        c == '_' ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9')
+      }) {
       let old = self.variables.get(name)
       let simple = if append {
         match old {
@@ -291,5 +300,83 @@ fn Preprocessor::line(
       return None
     }
   }
-  Some(self.expand_at(text, file, number, [], [], 0))
+  Some(self.expand_tokens(text, file, number))
+}
+
+///|
+// Expand within the original lexical token. A replacement inside a quote is
+// data, not new Kconfig syntax; quote/backslash bytes must remain literal.
+fn Preprocessor::expand_tokens(
+  self : Preprocessor,
+  text : String,
+  file : String,
+  number : String,
+) -> String raise ConfigError {
+  let mut out = ""
+  let mut quote : UInt16 = 0
+  let mut i = 0
+  while i < text.length() {
+    if text[i] == 92 && i + 1 < text.length() {
+      out += text[i:i + 2].to_owned()
+      i += 2
+      continue
+    }
+    if text[i] == 36 && i + 1 < text.length() && text[i + 1] == 40 {
+      let start = i
+      i += 2
+      let mut depth = 1
+      while i < text.length() && depth > 0 {
+        if text[i] == 40 {
+          depth += 1
+        }
+        if text[i] == 41 {
+          depth -= 1
+        }
+        i += 1
+      }
+      if depth != 0 {
+        raise Invalid(file + ":" + number + ": unterminated macro")
+      }
+      let replacement = self.expand_at(
+        text[start:i].to_owned(),
+        file,
+        number,
+        [],
+        [],
+        0,
+      )
+      if quote != 0 {
+        for j in 0..<replacement.length() {
+          if replacement[j] == quote || replacement[j] == 92 {
+            out += "\\"
+          }
+          out += replacement[j:j + 1].to_owned()
+        }
+      } else {
+        if replacement
+          .to_array()
+          .any(fn(c) { c == ' ' || c == '\t' || c == '\n' }) {
+          raise Invalid("macro expansion cannot span unquoted tokens")
+        }
+        if out.trim().is_empty() && !replacement.is_empty() {
+          raise Invalid("macro expansion cannot produce a Kconfig keyword")
+        }
+        out += replacement
+      }
+    } else {
+      if text[i] == 34 || text[i] == 39 {
+        if quote == 0 {
+          quote = text[i]
+        } else if quote == text[i] {
+          quote = 0
+        }
+      }
+      out += text[i:i + 1].to_owned()
+      i += 1
+    }
+    if out.length() > 65536 {
+      raise Invalid("expanded macro line too long")
+    }
+  }
+  out
 }

@@ -115,3 +115,6 @@ config UNKNOWN
       'parts/Kconfig.b':'config X\n int\n default 22\n',
       'parts/Kconfig.a':'config X\n int\n default 11\n',
     }, ''
+
+    yield 'macro-quoted-output-is-data', 'V = a"b\nconfig X\n string\n default "$(V)"\n', ''
+    yield 'macro-dashed-function', 'join-text = $(1)-$(2)\nconfig X\n string\n default "$(join-text,a,b)"\n', ''
