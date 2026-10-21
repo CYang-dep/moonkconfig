@@ -92,3 +92,10 @@ config UNKNOWN
 ''',''
 
     yield 'typed-unprefixed-hex', "config H\n hex \"H\"\n range 10 ff\n default 20\nconfig T\n string\n default 0x20\n", 'CONFIG_H=12\n'
+
+    yield 'declarations-alternative-dependency', "config LEFT\n bool \"Left\"\nconfig RIGHT\n bool \"Right\"\nif LEFT\nconfig SHARED\n int \"First\"\n default 11\nendif\nif RIGHT\nconfig SHARED\n int \"Second\"\n default 22\nendif\n", 'CONFIG_RIGHT=y\n'
+    yield 'declarations-first-active-default', "config A\n bool\n default y\nif A\nconfig X\n int\n default 11\nendif\nconfig X\n int\n default 22\n", ''
+    yield 'declarations-conditional-select', "config GATE\n bool \"Gate\"\nconfig S\n bool \"Source\"\n default y\nif GATE\nconfig S\n bool\n select T\nendif\nconfig T\n bool\n", ''
+    yield 'declarations-type-on-later-node', "config X\n default 12\nconfig X\n int \"X\"\n", ''
+    yield 'macros-flavor', 'BASE = old\nDEFER = $(BASE)\nNOW := $(BASE)\nBASE = new\nBASE += tail\nNOW += $(BASE)\nconfig X\n string\n default "$(DEFER):$(NOW)"\n', ''
+    yield 'macros-functions', 'COMMA := ,\nJOIN = $(1)$(COMMA)$(2)\nconfig X\n string\n default "$(JOIN,left,right):$(UNKNOWN)"\n', ''

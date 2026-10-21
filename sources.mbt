@@ -84,6 +84,7 @@ fn expand_sources(
   active : Array[String],
   output : Array[SourceLine],
   budget : Ref[Int32],
+  preprocessor : Preprocessor,
 ) -> Unit raise ConfigError {
   if active.length() >= 32 || active.contains(file) {
     raise Invalid("cyclic or overdeep source: " + file)
@@ -109,6 +110,11 @@ fn expand_sources(
       }
       None => ()
     }
+    let expanded = match preprocessor.line(line) {
+      Some(text) => text
+      None => continue
+    }
+    let line = { text: expanded, location: line.location, }
     let ts = tokenize(line.text)
     if !ts.is_empty() && (ts[0].text == "help" || ts[0].text == "---help---") {
       help_indent = Some(indentation(line.text))
@@ -132,7 +138,7 @@ fn expand_sources(
       }
       path = safe_source_path(path)
       if sources.contains(path) {
-        expand_sources(path, sources, active, output, budget)
+        expand_sources(path, sources, active, output, budget, preprocessor)
       } else if ts[0].text == "source" || ts[0].text == "rsource" {
         raise Invalid("missing source: " + path)
       }
@@ -151,8 +157,16 @@ fn expand_sources(
 pub fn parse_sources(
   entry : String,
   sources : Map[String, String],
+  preprocessor~ : Preprocessor = Preprocessor::new(),
 ) -> Schema raise ConfigError {
   let out = []
-  expand_sources(safe_source_path(entry), sources, [], out, Ref(0))
+  expand_sources(
+    safe_source_path(entry),
+    sources,
+    [],
+    out,
+    Ref(0),
+    preprocessor,
+  )
   parse_lines(out)
 }

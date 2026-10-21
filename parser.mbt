@@ -96,11 +96,14 @@ fn property(d : Definition, ts : Array[Token]) -> Unit raise ConfigError {
 
 ///|
 /// Parse the portable core; unsupported directives are errors, not ignored.
-pub fn parse_kconfig(text : String) -> Schema raise ConfigError {
+pub fn parse_kconfig(
+  text : String,
+  preprocessor~ : Preprocessor = Preprocessor::new(),
+) -> Schema raise ConfigError {
   if text.length() > 4194304 {
     raise Invalid("Kconfig input exceeds 4 Mi UTF-16 units")
   }
-  parse_lines(logical_lines(text, "Kconfig"))
+  parse_sources("Kconfig", Map([("Kconfig", text)]), preprocessor~)
 }
 
 ///|

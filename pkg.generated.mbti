@@ -16,11 +16,11 @@ pub fn parse_conditional(String) -> (Expr, Expr) raise ConfigError
 
 pub fn parse_expression(String) -> Expr raise ConfigError
 
-pub fn parse_kconfig(String) -> Schema raise ConfigError
+pub fn parse_kconfig(String, preprocessor? : Preprocessor) -> Schema raise ConfigError
 
 pub fn parse_number(String) -> Int64 raise ConfigError
 
-pub fn parse_sources(String, Map[String, String]) -> Schema raise ConfigError
+pub fn parse_sources(String, Map[String, String], preprocessor? : Preprocessor) -> Schema raise ConfigError
 
 pub fn parse_tri(String) -> Tri raise ConfigError
 
@@ -100,6 +100,11 @@ pub fn OverlayConflict::equal(Self, Self) -> Bool
 pub fn OverlayConflict::not_equal(Self, Self) -> Bool
 #deprecated
 pub fn OverlayConflict::to_repr(Self) -> @debug.Repr
+
+pub struct Preprocessor {
+  // private fields
+}
+pub fn Preprocessor::new(environment? : Map[String, String], shell? : (String) -> String raise ConfigError, message? : (String, String) -> Unit) -> Self
 
 pub struct Resolution {
   // private fields

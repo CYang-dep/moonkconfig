@@ -2,7 +2,7 @@
 test "untrusted controls macros oversized expressions and quoted directives fail" {
   for
     text in [
-      "config A\n string\n default \"$(shell echo bad)\"", "\"config\" A\n bool",
+      "config A\n string\n default \"$(shell,echo bad)\"", "\"config\" A\n bool",
       "config A\n string\n default \"bad\u0000text\"",
     ] {
     let failed = try {

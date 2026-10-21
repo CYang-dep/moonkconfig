@@ -73,9 +73,6 @@ pub fn tokenize(text : String) -> Array[Token] raise ConfigError {
       if !closed {
         raise Invalid("unclosed quote at \{start}")
       }
-      if value.contains("$(") || value.contains("${") {
-        raise Invalid("macro expansion in quoted strings unsupported")
-      }
       tokens.push({ text: value, quoted: true, offset: start, })
     } else if text[i] == 38 || text[i] == 124 {
       let c = text[i]
