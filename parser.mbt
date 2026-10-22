@@ -229,7 +229,12 @@ fn parse_lines(
             Some(i) => schema.choices[i].members.push(ts[1].text)
             None => ()
           }
-          schema.defs.push(definition(ts[1].text, None, line.location))
+          let node = definition(ts[1].text, None, line.location)
+          node.choice_owner = match active_choice {
+            Some(i) => Some(schema.choices[i].name)
+            None => None
+          }
+          schema.defs.push(node)
           current = Some(schema.defs.length() - 1)
         }
         "choice" => {
@@ -280,8 +285,10 @@ fn parse_lines(
             None => raise Invalid("unmatched endchoice")
           }
           let c = schema.choices[i]
-          for name in c.members {
-            let d = schema.defs[schema.index(name)]
+          for
+            d in schema.defs.filter(fn(node) {
+              node.choice_owner == Some(c.name)
+            }) {
             d.depends = Conjunction(d.depends, c.depends)
             d.prompt_if = Conjunction(d.prompt_if, c.prompt_if)
             if c.prompt == None {
@@ -398,7 +405,7 @@ fn parse_lines(
                 if linux612 && ts[0].text == "optional" {
                   raise Invalid("optional is not a Linux v6.12 directive")
                 }
-                choice_property(schema.choices[i], ts)
+                choice_property(schema.choices[i], ts, linux612~)
                 continue
               }
               if scopes.is_empty() {

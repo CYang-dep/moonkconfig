@@ -96,7 +96,12 @@ fn expand_sources(
   active.push(file)
   let mut help_indent : Int32? = None
   let mut help_margin : Int32? = None
-  for line in logical_lines(text, file) {
+  for original in logical_lines(text, file) {
+    let line = if linux612 {
+      { text: expand_indent_tabs(original.text), location: original.location, }
+    } else {
+      original
+    }
     budget.val += line.text.length() + 1
     if budget.val > 16777216 || output.length() >= 65536 {
       raise Invalid("expanded source resource budget exceeded")
@@ -219,4 +224,19 @@ pub fn parse_linux612(
   preprocessor~ : Preprocessor = Preprocessor::new(),
 ) -> Schema raise ConfigError {
   parse_sources(entry, sources, preprocessor~, linux612=true)
+}
+
+///|
+fn expand_indent_tabs(text : String) -> String {
+  let mut i = 0
+  let mut column = 0
+  while i < text.length() && (text[i] == 32 || text[i] == 9) {
+    column = if text[i] == 9 { (column / 8 + 1) * 8 } else { column + 1 }
+    i += 1
+  }
+  let spaces : Array[String] = []
+  for _ in 0..<column {
+    spaces.push(" ")
+  }
+  spaces.join("") + text[i:].to_owned()
 }

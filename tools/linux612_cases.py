@@ -46,3 +46,18 @@ def cases():
         'config A\n bool "A"\n help\n        Text\n  default y\n',
     ):
         yield case("extra-"+str(len(text))+"-"+text[:15],text)
+
+    for kind in ("int","hex"):
+        for raw in ('"abc"','"12junk"','"+3"','" 3"','"-0x1"','"0XFF"','"99999999999999999999999999999"'):
+            yield case("range-prefix-"+kind+raw, 'config A\n '+kind+' "A"\n range 1 8\n default '+raw+'\n')
+        for bound_kind,lo,hi in (("int","2","10"),("hex","0x02","0x0A")):
+            yield case("typed-range-"+kind+bound_kind, 'config LOW\n '+bound_kind+'\n default '+lo+'\nconfig HIGH\n '+bound_kind+'\n default '+hi+'\nconfig A\n '+kind+' "A"\n range LOW HIGH\n default 20\n')
+    for text in (
+        'config A\n\tbool "A"\n\thelp\n\t  Text\n  default y\n',
+        'choice\n prompt "C"\n default UNKNOWN\nconfig A\n bool "A"\nconfig B\n bool "B"\nendchoice\n',
+        'choice\n prompt "C"\n prompt "C again"\nconfig A\n bool "A"\nendchoice\n',
+        'choice\n prompt "C"\nconfig A\n bool "A"\nendchoice\nconfig A\n bool "external"\n',
+        'choice\n prompt "C"\nconfig A\n bool "A"\nconfig A\n bool "again"\nendchoice\n',
+        'config A\n bool "A"\n default y\nmenu "Menu"\n depends on n\nconfig B\n bool "B"\n default y\nendmenu\n',
+    ):
+        yield case("boundary-"+str(len(text))+text[:12],text)

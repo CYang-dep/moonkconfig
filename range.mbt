@@ -6,12 +6,13 @@ fn bound_number(
   linux612~ : Bool = false,
 ) -> Int64 raise ConfigError {
   if linux612 {
-    let value = expr.typed_value(kind, values, linux612=true)
-    let actual_kind = match value {
-      RawNumber(_, k) => k
+    let (raw, declared_kind, _) = linux_operand(expr, values)
+    let actual_kind = match declared_kind {
+      Some(Integer) => Integer
+      Some(Hex) => Hex
       _ => kind
     }
-    return linux_range_number(value.text(), actual_kind)
+    return linux_range_number(raw, actual_kind)
   }
   match expr.typed_value(kind, values) {
     Number(n) => n

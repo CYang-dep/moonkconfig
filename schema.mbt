@@ -12,6 +12,7 @@ priv struct Definition {
   mut modules : Bool
   mut help : String
   location : String
+  mut choice_owner : String?
 }
 
 ///|
@@ -29,6 +30,7 @@ fn definition(name : String, kind : Kind?, location : String) -> Definition {
     modules: false,
     help: "",
     location,
+    choice_owner: None,
   }
 }
 
@@ -145,6 +147,14 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       raise Invalid("empty choice " + c.name)
     }
     for name in c.members {
+      if self.linux612 &&
+        self.nodes.any(fn(node) {
+          node.name == name &&
+          node.prompt != None &&
+          node.choice_owner != Some(c.name)
+        }) {
+        raise Invalid("choice member prompt outside its choice group")
+      }
       let d = self.defs[self.index(name)]
       if self.linux612 && d.prompt == None {
         raise Invalid("choice member must have a prompt")
@@ -159,7 +169,7 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       }
     }
     for (name, _) in c.defaults {
-      if !c.members.contains(name) {
+      if !c.members.contains(name) && !self.linux612 {
         raise Invalid("choice default must name a member")
       }
     }

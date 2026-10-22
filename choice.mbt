@@ -11,18 +11,29 @@ priv struct Choice {
 }
 
 ///|
-fn choice_property(c : Choice, ts : Array[Token]) -> Unit raise ConfigError {
+fn choice_property(
+  c : Choice,
+  ts : Array[Token],
+  linux612~ : Bool = false,
+) -> Unit raise ConfigError {
   match ts[0].text {
     "bool" | "prompt" => {
       if ts.length() == 1 && ts[0].text == "bool" {
         return
       }
       let (tokens, cond) = conditional(ts, 1)
-      if tokens.length() != 1 || !tokens[0].quoted || c.prompt != None {
+      if tokens.length() != 1 ||
+        !tokens[0].quoted ||
+        (!linux612 && c.prompt != None) {
         raise Invalid("choice needs one quoted prompt")
       }
+      let had_prompt = c.prompt != None
       c.prompt = Some(tokens[0].text)
-      c.prompt_if = cond
+      c.prompt_if = if linux612 && had_prompt {
+        Disjunction(c.prompt_if, cond)
+      } else {
+        cond
+      }
     }
     "default" => {
       let (tokens, cond) = conditional(ts, 1)

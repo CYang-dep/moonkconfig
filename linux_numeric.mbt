@@ -144,18 +144,53 @@ fn linux_compare(a : Expr, b : Expr, values : Map[String, Value]) -> Int32 {
 
 ///|
 fn linux_range_number(raw : String, kind : Kind) -> Int64 {
-  // Range validation uses signed strtoll even for hex, saturating on overflow.
-  let text = if kind == Hex && !raw.has_prefix("0x") && !raw.has_prefix("0X") {
-    "0x" + raw
-  } else {
-    raw
+  // strtoll with an explicit radix accepts a prefix and saturates on overflow.
+  let mut i = 0
+  while i < raw.length() &&
+        (raw[i] == 32 || raw[i] == 9 || raw[i] == 10 || raw[i] == 13) {
+    i += 1
   }
-  parse_number(text) catch {
-    _ =>
-      if raw.has_prefix("-") {
+  let negative = i < raw.length() && raw[i] == 45
+  if i < raw.length() && (raw[i] == 45 || raw[i] == 43) {
+    i += 1
+  }
+  let base = if kind == Hex { 16UL } else { 10UL }
+  if kind == Hex &&
+    i + 2 < raw.length() &&
+    raw[i] == 48 &&
+    (raw[i + 1] == 120 || raw[i + 1] == 88) {
+    i += 2
+  }
+  let limit = if negative {
+    9223372036854775808UL
+  } else {
+    9223372036854775807UL
+  }
+  let mut n = 0UL
+  while i < raw.length() {
+    let c = raw[i].to_int()
+    let digit = if c >= 48 && c <= 57 {
+      c - 48
+    } else if c >= 65 && c <= 70 {
+      c - 55
+    } else if c >= 97 && c <= 102 {
+      c - 87
+    } else {
+      break
+    }
+    let d = digit.to_uint64()
+    if d >= base {
+      break
+    }
+    if n > (limit - d) / base {
+      return if negative {
         -9223372036854775807L - 1L
       } else {
         9223372036854775807L
       }
+    }
+    n = n * base + d
+    i += 1
   }
+  (if negative { 0UL - n } else { n }).reinterpret_as_int64()
 }
