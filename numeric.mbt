@@ -20,10 +20,14 @@ fn Expr::typed_value(
   linux612~ : Bool = false,
 ) -> Value raise ConfigError {
   if linux612 {
+    if kind == Boolean || kind == Tristate {
+      return Logic(self.evaluate(values, linux612=true).logic())
+    }
     let raw = match self {
       NumericLiteral(raw, _) => raw
       SymbolRef(name) => values.get(name).unwrap_or(Text(name)).text()
-      _ => self.evaluate(values, linux612=true).text()
+      Constant(v) => v.text()
+      _ => return linux_initial(kind)
     }
     return match kind {
       Integer | Hex => RawNumber(raw, kind)

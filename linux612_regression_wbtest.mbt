@@ -81,3 +81,34 @@ test "native comparisons use lexical strings and unsigned hex" {
   assert_eq(result.value("B"), Logic(Y))
   assert_eq(result.value("C"), Logic(Y))
 }
+
+///|
+test "native help dedentation returns to properties and duplicate prompts OR" {
+  let schema = parse_linux612(
+    "Kconfig",
+    Map([
+      (
+        "Kconfig", "config A\n bool \"First\"\n prompt \"Second\" if n\n help\n        Help paragraph\n  default y\n",
+      ),
+    ]),
+  )
+  let result = schema.resolve(Fragment::new())
+  assert_eq(result.value("A"), Logic(Y))
+  assert_eq(schema.help("A"), "Help paragraph")
+  assert_eq(result.visibility("A"), Y)
+}
+
+///|
+test "native range retains endpoint spelling including inverted bounds" {
+  let schema = parse_linux612(
+    "Kconfig",
+    Map([
+      (
+        "Kconfig", "config A\n int \"A\"\n range 0x01 0x08\n default 20\nconfig B\n int \"B\"\n range 8 1\n default 4\n",
+      ),
+    ]),
+  )
+  let result = schema.resolve(Fragment::new())
+  assert_eq(result.value("A").text(), "0x08")
+  assert_eq(result.value("B").text(), "8")
+}

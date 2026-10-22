@@ -12,25 +12,52 @@ fn set_prompt(
   d : Definition,
   tokens : Array[Token],
   start : Int32,
+  linux612~ : Bool = false,
 ) -> Unit raise ConfigError {
   let (p, cond) = conditional(tokens, start)
-  if p.length() != 1 || !p[0].quoted || d.prompt != None {
+  if p.length() != 1 || !p[0].quoted || (!linux612 && d.prompt != None) {
     raise Invalid("expected one unique quoted prompt")
   }
-  d.prompt = Some(p[0].text)
-  d.prompt_if = Conjunction(d.prompt_if, cond)
+  let had_prompt = d.prompt != None
+  d.prompt = Some(
+    if linux612 {
+      p[0].text.trim_start().to_owned()
+    } else {
+      p[0].text
+    },
+  )
+  d.prompt_if = if linux612 {
+    if had_prompt {
+      Disjunction(d.prompt_if, cond)
+    } else {
+      cond
+    }
+  } else {
+    Conjunction(d.prompt_if, cond)
+  }
 }
 
 ///|
-fn set_kind(d : Definition, kind : Kind) -> Unit raise ConfigError {
+fn set_kind(
+  d : Definition,
+  kind : Kind,
+  linux612~ : Bool = false,
+) -> Unit raise ConfigError {
   match d.kind {
-    Some(k) => if k != kind { raise Invalid("conflicting symbol type") }
+    Some(k) =>
+      if k != kind && !linux612 {
+        raise Invalid("conflicting symbol type")
+      }
     None => d.kind = Some(kind)
   }
 }
 
 ///|
-fn property(d : Definition, ts : Array[Token]) -> Unit raise ConfigError {
+fn property(
+  d : Definition,
+  ts : Array[Token],
+  linux612~ : Bool = false,
+) -> Unit raise ConfigError {
   match ts[0].text {
     "bool" | "tristate" | "string" | "int" | "hex" => {
       let kind = match ts[0].text {
@@ -40,18 +67,18 @@ fn property(d : Definition, ts : Array[Token]) -> Unit raise ConfigError {
         "int" => Integer
         _ => Hex
       }
-      set_kind(d, kind)
+      set_kind(d, kind, linux612~)
       if ts.length() > 1 {
-        set_prompt(d, ts, 1)
+        set_prompt(d, ts, 1, linux612~)
       }
     }
-    "prompt" => set_prompt(d, ts, 1)
+    "prompt" => set_prompt(d, ts, 1, linux612~)
     "default" | "def_bool" | "def_tristate" => {
       if ts[0].text == "def_bool" {
-        set_kind(d, Boolean)
+        set_kind(d, Boolean, linux612~)
       }
       if ts[0].text == "def_tristate" {
-        set_kind(d, Tristate)
+        set_kind(d, Tristate, linux612~)
       }
       let (v, c) = conditional(ts, 1)
       d.defaults.push((parse_expression_tokens(v), c))
@@ -150,6 +177,7 @@ fn parse_lines(
   let mut active_choice : Int32? = None
   let mut current : Int32? = None
   let mut comment_header = false
+  let mut seen_statement = false
   let mut pos = 0
   while pos < lines.length() {
     let line = lines[pos]
@@ -168,6 +196,22 @@ fn parse_lines(
         ].contains(ts[0].text) {
         comment_header = false
       }
+      if linux612 {
+        validate_linux_tokens(ts)
+        if ts[0].text == "mainmenu" && seen_statement {
+          raise Invalid("mainmenu must be the first statement")
+        }
+        if active_choice != None && ["menu", "menuconfig"].contains(ts[0].text) {
+          raise Invalid("statement not allowed inside choice")
+        }
+        if ts[0].text == "bool" &&
+          current == None &&
+          active_choice != None &&
+          ts.length() == 1 {
+          raise Invalid("choice bool requires a prompt")
+        }
+      }
+      seen_statement = true
       match ts[0].text {
         "config" | "menuconfig" => {
           if ts.length() != 2 ||
@@ -299,7 +343,12 @@ fn parse_lines(
           let mut margin = -1
           while pos < lines.length() {
             let next = lines[pos].text
-            if !next.trim().is_empty() && indentation(next) <= base {
+            if !next.trim().is_empty() &&
+              (if linux612 && margin >= 0 {
+                indentation(next) < margin
+              } else {
+                indentation(next) <= base
+              }) {
               break
             }
             if !next.trim().is_empty() && margin < 0 {
@@ -340,7 +389,7 @@ fn parse_lines(
               if linux612 && ts[0].text == "option" {
                 raise Invalid("option is not a Linux v6.12 directive")
               }
-              property(schema.defs[i], ts)
+              property(schema.defs[i], ts, linux612~)
             }
             None => {
               if active_choice is Some(i) &&

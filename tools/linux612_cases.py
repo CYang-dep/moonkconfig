@@ -29,3 +29,20 @@ def cases():
     yield case("native-config-overrides",'config A\n int "A"\n default 1\n',"CONFIG_UNKNOWN=y\nCONFIG_A=3\nCONFIG_A=4\nCONFIG_A=oops\n")
     yield case("source-is-literal", "",files={"Kconfig":'source "Kconfig.*"\n',"Kconfig.a":'config A\n bool\n default y\n'})
     yield case("declarations-across-files", "", files={"Kconfig":'source "one"\nsource "two"\n',"one":'config A\n bool "A"\n default y\n',"two":'config A\n bool "A again"\n depends on n\n default n\n'})
+
+    for text in (
+        'mainmenu "First"\nmainmenu "Second"\n',
+        'choice\n prompt "C"\n bool\nconfig A\n bool "A"\nendchoice\n',
+        'choice\n prompt "C"\nmenu "M"\nconfig A\n bool "A"\nendmenu\nendchoice\n',
+        'config A\n int "A"\n range 8 1\n default 4\n',
+        'config A\n int "A"\n range 0x01 0x08\n default 20\n',
+        'config A\n int "A"\n default y && y\n',
+        'config A\n string "A"\n default y && y\n',
+        'config A\n bool "A"\n default y if !y = n\n',
+        'config A\n bool "A"\n default y if y = y = y\n',
+        'config A\n bool "A"\n default y if (y) = y\n',
+        'config A\n bool "A"\n prompt "Again" if n\n',
+        'config A\n bool "A"\nconfig A\n tristate "A"\n',
+        'config A\n bool "A"\n help\n        Text\n  default y\n',
+    ):
+        yield case("extra-"+str(len(text))+"-"+text[:15],text)

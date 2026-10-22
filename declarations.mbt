@@ -27,7 +27,7 @@ fn merge_declarations(parsed : Schema) -> Schema raise ConfigError {
       }
     }
     match node.kind {
-      Some(kind) => set_kind(d, kind)
+      Some(kind) => set_kind(d, kind, linux612=parsed.linux612)
       None => ()
     }
     d.depends = Disjunction(d.depends, node.depends)

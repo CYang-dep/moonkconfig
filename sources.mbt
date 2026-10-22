@@ -95,6 +95,7 @@ fn expand_sources(
   }
   active.push(file)
   let mut help_indent : Int32? = None
+  let mut help_margin : Int32? = None
   for line in logical_lines(text, file) {
     budget.val += line.text.length() + 1
     if budget.val > 16777216 || output.length() >= 65536 {
@@ -102,7 +103,15 @@ fn expand_sources(
     }
     match help_indent {
       Some(level) => {
-        if line.text.trim().is_empty() || indentation(line.text) > level {
+        if line.text.trim().is_empty() ||
+          (if linux612 {
+            indentation(line.text) >= help_margin.unwrap_or(level + 1)
+          } else {
+            indentation(line.text) > level
+          }) {
+          if !line.text.trim().is_empty() && help_margin == None {
+            help_margin = Some(indentation(line.text))
+          }
           output.push(line)
           continue
         }
@@ -118,6 +127,7 @@ fn expand_sources(
     let ts = tokenize(line.text)
     if !ts.is_empty() && (ts[0].text == "help" || ts[0].text == "---help---") {
       help_indent = Some(indentation(line.text))
+      help_margin = None
     }
     if !ts.is_empty() &&
       (

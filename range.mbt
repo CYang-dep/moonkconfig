@@ -45,7 +45,7 @@ fn active_range(
         values,
         linux612=schema.linux612,
       )
-      if lo > hi {
+      if lo > hi && !schema.linux612 {
         raise Invalid("inverted active range: " + d.name)
       }
       return Some((lo, hi))
@@ -74,6 +74,32 @@ fn clamp_default(
   value : Value,
   values : Map[String, Value],
 ) -> Value raise ConfigError {
+  if schema.linux612 {
+    let modules = schema.modules_enabled(values)
+    for (low, high, cond) in d.ranges {
+      if cond
+        .condition(values, modules, linux612=true)
+        .meet(d.depends.condition(values, modules, linux612=true)) ==
+        N {
+        continue
+      }
+      let lo = bound_number(low, schema.kind(d.name), values, linux612=true)
+      let hi = bound_number(high, schema.kind(d.name), values, linux612=true)
+      let n = linux_range_number(value.text(), schema.kind(d.name))
+      let endpoint = if n < lo {
+        Some(low)
+      } else if n > hi {
+        Some(high)
+      } else {
+        None
+      }
+      return match endpoint {
+        Some(e) => e.typed_value(schema.kind(d.name), values, linux612=true)
+        None => value
+      }
+    }
+    return value
+  }
   match active_range(schema, d, values) {
     None => value
     Some((lo, hi)) => {
