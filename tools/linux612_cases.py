@@ -79,3 +79,11 @@ def cases():
         'F = $(1)-$(2)\nconfig A\n string\n default "$(F,a,b)"\n',
     ):
         yield case("diagnostics-"+str(len(text))+text[:15],text)
+
+    files = {"Kconfig": 'config LEFT\n bool "Left"\nconfig RIGHT\n bool "Right"\nsource "left/Kconfig"\nsource "right/Kconfig"\n',
+             "left/Kconfig": 'if LEFT\nconfig SHARED\n int "Shared left"\n default 11\nendif\n',
+             "right/Kconfig": 'if RIGHT\nconfig SHARED\n int "Shared right"\n default 22\nendif\n'}
+    for left,right,number in (("n","n",None),("y","n",None),("n","y",None),("y","y",None),("n","y","37")):
+        fragment = "CONFIG_LEFT="+left+"\nCONFIG_RIGHT="+right+"\n"
+        if number: fragment += "CONFIG_SHARED="+number+"\n"
+        yield case("cross-file-final-"+left+right+str(number), "", fragment, files)

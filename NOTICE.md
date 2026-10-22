@@ -1,15 +1,11 @@
 # Provenance and references
 
-MoonKconfig is an original MoonBit implementation, not a source-code port.
+MoonKconfig is an original MoonBit implementation under Apache-2.0, developed with AI assistance. It is not a source-code translation of Linux or Kconfiglib.
 
-- Linux Kconfig language documentation: `torvalds/linux`, commit `f47d223627f80cb7a1eb14c585fe6cb35de5e984`, `Documentation/kbuild/kconfig-language.rst`. Studied as language behavior documentation; no Linux implementation or fixtures copied.
-- Kconfiglib: https://github.com/ulfalizer/Kconfiglib , upstream inspected commit `061e71f7d78cb057762d88de088055361863deff`; development differential oracle is the separately installed PyPI release `kconfiglib==14.1.0`, ISC license. Not vendored, not linked at runtime. All differential fixtures in `tools/cases.py` are original synthetic inputs.
-- Runtime: official MoonBit core. Local baseline `moon 0.1.20261012`, `moonc v0.10.15+943464bfa`.
-- GitHub Actions uses the official stable installer and logs its actual version; C backend runs on Ubuntu.
-- Source, tests and documentation were developed with AI assistance. Human-facing authorship is the account-bound project identity, not a claim of manual-only implementation.
+- Fixed language endpoint: Linux v6.12, commit `adc218676eef25575469234709c2d87185ca223a`, including the language and macro documentation and the native `scripts/kconfig/conf` behavior.
+- `tools/linux612-pins.json` records Git blob hashes for external development-oracle sources and input fixtures. Tools retrieve/verify and compile these in an external checkout. Linux C implementation and upstream fixtures retain GPL-2.0 and their original notices; they are not vendored into the repository or MoonCakes package, linked into the library, or relicensed by this project. Derived test reports identify their external inputs. Original synthetic vectors in this repository remain project code.
+- Earlier documentation study: `torvalds/linux` commit `f47d223627f80cb7a1eb14c585fe6cb35de5e984`.
+- Kconfiglib: https://github.com/ulfalizer/Kconfiglib , inspected commit `061e71f7d78cb057762d88de088055361863deff`. Separately installed PyPI `kconfiglib==14.1.0` (ISC) is a development-only oracle, not vendored or linked at runtime. `tools/cases.py` contains original synthetic inputs.
+- Runtime dependency: official MoonBit core. Local baseline `moon 0.1.20261016`, `moonc v0.10.16+b1a0e846e`; CI installs official stable and records its actual version.
 
-The Apache-2.0 license applies to this repository's original code and documents. Merely referring to Linux documentation does not relicense Linux source or claim its code was ported. External tools retain their respective licenses.
-
-## 0.2.0 符合性目标补充
-
-完整语言符合性终点固定为 Linux v6.12。另参考该标签下 Documentation/kbuild/kconfig-language.rst 和 kconfig-macro-language.rst，说明多次声明、变量展开及预处理函数规则。文档参考不等于已完成全部符合性；本阶段证据及差异见 docs/conformance.md。新增合成配置与实现为原创，没有复制上游实现或测试夹具。
+Tests and reports establish their measured scope. They do not certify every possible language input or claim organizer acceptance. See docs/conformance.md for the fixed target, host responsibilities and reproducible evidence.

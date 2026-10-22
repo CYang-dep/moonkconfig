@@ -38,6 +38,7 @@ jobs:
           moon run examples/ui --target ${{ matrix.target }}
           moon run examples/quickstart --target ${{ matrix.target }}
           moon run examples/declarations --target ${{ matrix.target }}
+          moon run examples/linux612 --target ${{ matrix.target }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

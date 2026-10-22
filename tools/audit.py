@@ -18,7 +18,8 @@ def main():
         changed=git('diff-tree','--root','--no-commit-id','--name-only','-r',sha).splitlines()
         if any(p.endswith('.mbt') and not pathlib.PurePosixPath(p).name.startswith('pkg.generated') for p in changed):engineering.append(sha)
     readme=(ROOT/'README.md').read_text(encoding='utf-8')
-    for phrase in ['0.2.0','安装','快速开始','限制','Apache-2.0','AI','moon test','examples/firmware','examples/variants','examples/ui']:
+    version=re.search(r'version\s*=\s*"([^"]+)"', (ROOT/'moon.mod').read_text(encoding='utf-8')).group(1)
+    for phrase in [version,'安装','快速开始','限制','Apache-2.0','AI','moon test','examples/firmware','examples/variants','examples/ui']:
         assert phrase in readme, 'missing Chinese documentation requirement: '+phrase
     for link in re.findall(r'\]\(([^)]+)\)',readme):
         if '://' not in link and not link.startswith('#'):assert (ROOT/link.split('#')[0]).exists(),link

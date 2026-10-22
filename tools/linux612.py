@@ -88,7 +88,8 @@ def generated_test(index, case, answer):
              "let files = Map([" + ",".join("(" + quote(n) + "," + quote(t) + ")" for n, t in case["files"].items()) + "])"]
     commands = {"echo hello world 3": "hello world 3\n", "printf 'hello\\nworld\\n\\n4\\n\\n\\n'": "hello\nworld\n\n4\n\n\n"}
     arms = ";".join(quote(k) + " => " + quote(v) for k, v in commands.items())
-    lines.append("let preprocessor = Preprocessor::new(shell=fn(command) raise ConfigError { match command { " + arms + '; _ => raise Invalid("unmapped test command " + command) } })')
+    lines.append("let messages : Array[String] = []")
+    lines.append('let preprocessor = Preprocessor::new(message=fn(kind,text) { messages.push(kind + ":" + text) }, shell=fn(command) raise ConfigError { match command { ' + arms + '; _ => raise Invalid("unmapped test command " + command) } })')
     if answer["returncode"]:
         lines.append('assert_true(try { ignore(parse_linux612("Kconfig", files, preprocessor=preprocessor).resolve(Fragment::new())); false } catch { _ => true })')
     else:
@@ -100,7 +101,11 @@ def generated_test(index, case, answer):
         lines.extend(['let emitted = schema.export_linux_config(result).split("\\n").filter(fn(line) { !line.is_empty() }).map(fn(line) { line.to_owned() }).to_array()',
                       'emitted.sort_by(fn(a,b) { a.lexical_compare(b) })', 'assert_eq(emitted, [' + ','.join(quote(l) for l in expected) + '])'])
     if not answer["returncode"]:
-        lines.insert(4, "try {")
+        if case["label"].startswith("upstream preprocess/"):
+            expected_messages = ["info:" + line for line in answer["stdout"].splitlines() if line and not line.startswith("#")]
+            expected_messages += ["warning:" + line for line in answer["stderr"].splitlines()]
+            lines.append("assert_eq(messages, [" + ",".join(quote(m) for m in expected_messages) + "])")
+        lines.insert(5, "try {")
         lines.append("} catch { Invalid(msg) => fail(msg); other => raise other }")
     lines.append("}")
     return "\n".join(lines)
