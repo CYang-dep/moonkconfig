@@ -46,5 +46,33 @@ jobs:
           python -m pip install kconfiglib==14.1.0
           python tools/differential.py --target ${{ matrix.target }}
           python tools/check_declarations.py --target ${{ matrix.target }}
+      - name: Check out the fixed Linux v6.12 oracle and component inputs
+        uses: actions/checkout@v4
+        with:
+          repository: torvalds/linux
+          ref: adc218676eef25575469234709c2d87185ca223a
+          path: _oracle/linux
+          sparse-checkout: |
+            scripts/kconfig
+            scripts/include
+            drivers/iio/temperature
+            drivers/rtc
+            drivers/usb/serial
+            drivers/usb/typec/tcpm
+            drivers/usb/typec/ucsi
+            fs/notify/fanotify
+            fs/notify/inotify
+      - name: Build native Linux v6.12 oracle and compare exact configurations
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bison flex
+          python tools/build_linux612.py --source _oracle/linux --output _oracle/build
+          python tools/linux612.py --source _oracle/linux --conf _oracle/build/conf --target ${{ matrix.target }} --report _oracle/report-${{ matrix.target }}.json
+      - name: Preserve native conformance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux612-${{ matrix.target }}
+          path: _oracle/report-${{ matrix.target }}.json
       - name: Conservative source and meaningful history audit
         run: python tools/audit.py

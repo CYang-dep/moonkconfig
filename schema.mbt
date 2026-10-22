@@ -143,7 +143,7 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
     if self.linux612 && c.prompt == None {
       raise Invalid("choice must have a prompt")
     }
-    if c.members.is_empty() {
+    if c.members.is_empty() && !self.linux612 {
       raise Invalid("empty choice " + c.name)
     }
     for name in c.members {
@@ -194,10 +194,11 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
       b.validate_bounds()
       c.validate_bounds()
     }
-    if d.modules && kind != Boolean {
+    if d.modules && kind != Boolean && !self.linux612 {
       raise Invalid("module switch must be bool")
     }
-    if (kind == StringType || kind == Integer || kind == Hex) &&
+    if !self.linux612 &&
+      (kind == StringType || kind == Integer || kind == Hex) &&
       (!d.selects.is_empty() || !d.implies.is_empty()) {
       raise Invalid("select/imply source must be logical: " + d.name)
     }
@@ -210,11 +211,11 @@ pub fn Schema::validate(self : Schema) -> Unit raise ConfigError {
         continue
       }
       let target_kind = self.kind(edge.0)
-      if target_kind != Boolean && target_kind != Tristate {
+      if !self.linux612 && target_kind != Boolean && target_kind != Tristate {
         raise Invalid("select/imply target must be logical: " + edge.0)
       }
     }
-    if !d.ranges.is_empty() && kind != Integer && kind != Hex {
+    if !self.linux612 && !d.ranges.is_empty() && kind != Integer && kind != Hex {
       raise Invalid("range needs numeric type")
     }
   }

@@ -76,6 +76,9 @@ fn clamp_default(
   values : Map[String, Value],
 ) -> Value raise ConfigError {
   if schema.linux612 {
+    if schema.kind(d.name) != Integer && schema.kind(d.name) != Hex {
+      return value
+    }
     let modules = schema.modules_enabled(values)
     for (low, high, cond) in d.ranges {
       if cond

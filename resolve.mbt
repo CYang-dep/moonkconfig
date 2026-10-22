@@ -113,6 +113,18 @@ fn base_value(
   requests : Map[String, Value],
   values : Map[String, Value],
 ) -> (Value, String) raise ConfigError {
+  if schema.linux612 && ["n", "m", "y"].contains(d.name) {
+    return (
+      Logic(
+        match d.name {
+          "y" => Y
+          "m" => M
+          _ => N
+        },
+      ),
+      "constant",
+    )
+  }
   if schema.linux612 && d.kind == None {
     return (Text(d.name), "undefined-type")
   }

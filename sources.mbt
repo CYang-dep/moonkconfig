@@ -110,7 +110,7 @@ fn expand_sources(
       Some(level) => {
         if line.text.trim().is_empty() ||
           (if linux612 {
-            indentation(line.text) >= help_margin.unwrap_or(level + 1)
+            indentation(line.text) >= help_margin.unwrap_or(1)
           } else {
             indentation(line.text) > level
           }) {
@@ -124,12 +124,17 @@ fn expand_sources(
       }
       None => ()
     }
-    let expanded = match preprocessor.line(line) {
+    let processed = preprocessor.line(line) catch {
+      Invalid(msg) => raise Invalid(line.location + ": " + msg)
+    }
+    let expanded = match processed {
       Some(text) => text
       None => continue
     }
     let line = { text: expanded, location: line.location, }
-    let ts = tokenize(line.text)
+    let ts = tokenize(line.text) catch {
+      Invalid(msg) => raise Invalid(line.location + ": " + msg)
+    }
     if !ts.is_empty() && (ts[0].text == "help" || ts[0].text == "---help---") {
       help_indent = Some(indentation(line.text))
       help_margin = None
@@ -203,15 +208,6 @@ pub fn parse_sources(
     preprocessor,
     linux612,
   )
-  if linux612 {
-    for line in out {
-      let ts = tokenize(line.text)
-      if !ts.is_empty() &&
-        ["rsource", "osource", "orsource"].contains(ts[0].text) {
-        raise Invalid("extension outside Linux v6.12")
-      }
-    }
-  }
   parse_lines(out, linux612~)
 }
 

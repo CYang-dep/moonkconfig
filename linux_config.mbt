@@ -17,6 +17,12 @@ pub fn Schema::read_linux_config(
       (line.has_prefix("#") && !line.has_prefix("# CONFIG_")) {
       continue
     }
+    if line.has_prefix(" ") || line.has_prefix("\t") {
+      messages.push(
+        "line " + (index + 1).to_string() + ": unexpected leading whitespace",
+      )
+      continue
+    }
     try {
       let parsed = self.parse_config(line)
       for (name, value) in parsed.entries {
@@ -41,6 +47,9 @@ fn linux_should_write(
   d : Definition,
   result : Resolution,
 ) -> Bool raise ConfigError {
+  if ["n", "m", "y"].contains(d.name) {
+    return false
+  }
   let kind = schema.effective_kind(d.name, result.values)
   if direct_visibility(schema, d, kind, result.values) != N {
     return true

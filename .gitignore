@@ -6,3 +6,7 @@
 __pycache__/
 *.pyc
 oracle_*_wbtest.mbt
+
+/_oracle/
+linux612_*_wbtest.mbt
+v612_*_wbtest.mbt

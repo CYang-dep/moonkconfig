@@ -61,3 +61,21 @@ def cases():
         'config A\n bool "A"\n default y\nmenu "Menu"\n depends on n\nconfig B\n bool "B"\n default y\nendmenu\n',
     ):
         yield case("boundary-"+str(len(text))+text[:12],text)
+
+    for text in (
+        'choice\n prompt "Empty"\nendchoice\n',
+        'config A\n int "A"\n default 5\n select B\nconfig B\n bool "B"\n',
+        'config A\n bool "A"\n default y\n select B\nconfig B\n string "B"\n default "hello"\n',
+        'config A\n bool "A"\n range 1 3\n default y\n',
+        'config A\n string "A"\n range 1 3\n default "abc"\n',
+        'config A\n int "A"\n modules\n default 1\n',
+        'config A\n bool "A"\n modules\nconfig A\n bool "A again"\n modules\n',
+        'config y\n bool "Y"\n',
+        'config a.b/c\n bool "A"\n default y\n',
+        'config A\n bool "A"\n depends on A\n',
+        'config A\n bool "A"\n default A\n',
+        'X = $(X)\nconfig A\n string\n default "$(X)"\n',
+        'X := now\nX += later\nconfig A\n string\n default "$(X)"\n',
+        'F = $(1)-$(2)\nconfig A\n string\n default "$(F,a,b)"\n',
+    ):
+        yield case("diagnostics-"+str(len(text))+text[:15],text)

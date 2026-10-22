@@ -178,6 +178,7 @@ fn parse_lines(
   let mut current : Int32? = None
   let mut comment_header = false
   let mut seen_statement = false
+  let mut seen_modules = false
   let mut pos = 0
   while pos < lines.length() {
     let line = lines[pos]
@@ -198,6 +199,12 @@ fn parse_lines(
       }
       if linux612 {
         validate_linux_tokens(ts)
+        if ts[0].text == "modules" {
+          if seen_modules {
+            raise Invalid("modules directive repeated")
+          }
+          seen_modules = true
+        }
         if ts[0].text == "mainmenu" && seen_statement {
           raise Invalid("mainmenu must be the first statement")
         }
@@ -217,9 +224,7 @@ fn parse_lines(
           if ts.length() != 2 ||
             ts[1].quoted ||
             !identifier(ts[1].text) ||
-            ts[1].text == "n" ||
-            ts[1].text == "m" ||
-            ts[1].text == "y" {
+            (!linux612 && ["n", "m", "y"].contains(ts[1].text)) {
             raise Invalid("invalid config declaration")
           }
           if schema.defs.length() >= 4096 {
@@ -351,8 +356,8 @@ fn parse_lines(
           while pos < lines.length() {
             let next = lines[pos].text
             if !next.trim().is_empty() &&
-              (if linux612 && margin >= 0 {
-                indentation(next) < margin
+              (if linux612 {
+                indentation(next) < (if margin >= 0 { margin } else { 1 })
               } else {
                 indentation(next) <= base
               }) {
