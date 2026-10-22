@@ -87,3 +87,5 @@ def cases():
         fragment = "CONFIG_LEFT="+left+"\nCONFIG_RIGHT="+right+"\n"
         if number: fragment += "CONFIG_SHARED="+number+"\n"
         yield case("cross-file-final-"+left+right+str(number), "", fragment, files)
+
+    yield case("source-unquoted", "", files={"Kconfig": "source sub/Kconfig\n", "sub/Kconfig": 'config A\n bool "A"\n default y\n'})

@@ -37,9 +37,9 @@
 
 `tools/linux612-pins.json` 固定外部源文件 Git blob SHA；`tools/build_linux612.py` 检查后编译 C 工具。`tools/linux612.py` 对每个输入运行原生 olddefconfig，再生成临时 MoonBit 断言；临时文件在 finally 清理，不计入生产规模。
 
-当前 327 项包含 14 个上游夹具/模式输入、原创表达式/数值/语法/警告向量、五组跨文件最终配置，以及 7 个真实叶组件在四组明确宿主配置下的 28 个集成输入：温度传感器、RTC、USB serial、TCPM、UCSI、fanotify、inotify。比较接受/拒绝、每个值的实际文本、最终赋值集合；预处理夹具还比较 info/warning 的实际消息及位置。JSON 保留输入 SHA-256、原生返回码和结果映射。
+当前 328 项包含 14 个上游夹具/模式输入、原创表达式/数值/语法/警告向量、五组跨文件最终配置，以及 7 个真实叶组件在四组明确宿主配置下的 28 个集成输入：温度传感器、RTC、USB serial、TCPM、UCSI、fanotify、inotify。比较接受/拒绝、每个值的实际文本、最终赋值集合；预处理夹具还比较 info/warning 的实际消息及位置。JSON 保留输入 SHA-256、原生返回码和结果映射。
 
-本地 wasm-gc、wasm、JS 已执行同组 327 项。公开 CI 对 wasm-gc/wasm/js/native 重新构建 oracle、执行对照并上传逐项报告。以对应发行提交的真实 CI 为发布门禁；文档不把尚未运行的任务写成通过。
+本地 wasm-gc、wasm、JS 已执行同组 328 项。公开 CI 对 wasm-gc/wasm/js/native 重新构建 oracle、执行对照并上传逐项报告。以对应发行提交的真实 CI 为发布门禁；文档不把尚未运行的任务写成通过。
 
 Kconfiglib 14.1.0 的 113 场景/1361 断言是额外回归，不等同于 Linux v6.12 证明。外部 conf 自身的上游自测也不等同于本库通过全部交互测试。
 

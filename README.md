@@ -70,7 +70,8 @@ moon run examples/ui --target js
 
 ```moonbit
 let schema = @config.parse_linux612("Kconfig", files)
-let requests = schema.read_linux_config("CONFIG_RIGHT=y")
+let (requests, diagnostics) = schema.read_linux_config("CONFIG_RIGHT=y")
+ignore(diagnostics)
 let result = schema.resolve(requests)
 println(schema.export_linux_config(result))
 ```
@@ -118,7 +119,7 @@ python tools/check_declarations.py --target js
 python tools/audit.py
 ```
 
-常驻测试 59 个；原有 Kconfiglib 14.1.0 合成对照 113 场景、1361 断言。固定 Linux v6.12 原生 conf 对照 **327 项**，包括接受/拒绝输入、预处理消息、配置值和最终赋值集合、上游语言夹具，以及 7 个真实组件的 28 组配置。工具在测试前检查外部文件的 Git blob 摘要；不把自身输出当参考答案。
+常驻测试 59 个；原有 Kconfiglib 14.1.0 合成对照 113 场景、1361 断言。固定 Linux v6.12 原生 conf 对照 **328 项**，包括接受/拒绝输入、预处理消息、配置值和最终赋值集合、上游语言夹具，以及 7 个真实组件的 28 组配置。工具在测试前检查外部文件的 Git blob 摘要；不把自身输出当参考答案。
 
 原生工具复现（Linux，已安装 cc、bison、flex、Python）：
 
